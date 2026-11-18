@@ -98,6 +98,7 @@ function Builder() {
 export function RecipesSection() {
   const rules = useStore((s) => s.rules)
   const active = rules.filter((r) => r.enabled).length
+  const locked = useStore((s) => s.challenge !== null)
   return (
     <details className="recipes" open>
       <summary>
@@ -105,8 +106,9 @@ export function RecipesSection() {
         <b aria-label={`${active} of ${rules.length} rules active`}>{active}/{rules.length} active</b>
       </summary>
 
-      <h3>Presets</h3>
-      <ul className="presets">
+      {locked && <p className="hint">Rules are set by the challenge and cannot be edited until you exit.</p>}
+      {!locked && <h3>Presets</h3>}
+      {!locked && <ul className="presets">
         {PRESETS.map((p) => {
           const added = rules.some((r) => r.presetId === p.presetId)
           return (
@@ -118,16 +120,16 @@ export function RecipesSection() {
             </li>
           )
         })}
-      </ul>
+      </ul>}
 
-      <h3>Your rules</h3>
+      <h3>{locked ? 'Level rules' : 'Your rules'}</h3>
       {rules.length === 0 && <p className="hint">No rules yet. Add a preset, use the builder, or type a sentence in the command bar.</p>}
       <ul className="rules">
         {rules.map((r) => (
           <li key={r.id} className={r.enabled ? '' : 'off'}>
             <div className="rule-head">
               <label className="toggle">
-                <input type="checkbox" checked={r.enabled} onChange={() => toggleRule(r.id)} aria-label={`${r.name} enabled`} />
+                <input type="checkbox" checked={r.enabled} disabled={locked} onChange={() => toggleRule(r.id)} aria-label={`${r.name} enabled`} />
                 <strong>{r.name}</strong>
               </label>
               <span className="rule-actions">
@@ -136,7 +138,7 @@ export function RecipesSection() {
                     <Play size={14} aria-hidden /><span className="sr-only">Run {r.name} once</span>
                   </button>
                 )}
-                <button className="icon-btn danger" title="Delete rule" onClick={() => { deleteRule(r.id); say(`Deleted rule "${r.name}".`) }}>
+                <button className="icon-btn danger" disabled={locked} title="Delete rule" onClick={() => { deleteRule(r.id); say(`Deleted rule "${r.name}".`) }}>
                   <Trash2 size={14} aria-hidden /><span className="sr-only">Delete {r.name}</span>
                 </button>
               </span>
@@ -147,14 +149,14 @@ export function RecipesSection() {
           </li>
         ))}
       </ul>
-      {rules.length > 0 && (
+      {!locked && rules.length > 0 && (
         <button className="btn wide danger" onClick={() => { clearRules(); engine.reset(); say('All rules cleared.') }}>
           <Trash2 size={14} aria-hidden /> Clear all rules
         </button>
       )}
 
-      <h3>Rule builder</h3>
-      <Builder />
+      {!locked && <h3>Rule builder</h3>}
+      {!locked && <Builder />}
     </details>
   )
 }

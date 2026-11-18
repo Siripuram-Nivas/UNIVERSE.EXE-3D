@@ -9,6 +9,9 @@ import { BurstFX } from './BurstFX'
 import { Chamber } from './Chamber'
 import { PhysicsController } from './PhysicsController'
 import { RealityRunner } from './RealityRunner'
+import { ChallengeScene } from './ChallengeScene'
+import { SelectionRing } from './SelectionRing'
+import { Sparks } from './Sparks'
 import { Reactor } from './Reactor'
 import { SimObjectBody } from './SimObjectBody'
 import { prefersReducedMotion } from '../util'
@@ -43,13 +46,18 @@ function World() {
   const gm = useStore((s) => s.gravityMode)
   const mag = useStore((s) => s.gravityMagnitude)
   const paused = useStore((s) => s.paused)
+  const epoch = useStore((s) => s.epoch)
+  const inChallenge = useStore((s) => s.challenge !== null)
   return (
     <Physics gravity={gravityVector({ gravityMode: gm, gravityMagnitude: mag })} paused={paused}>
       <PhysicsController />
       <RealityRunner />
       <Chamber />
-      <Reactor />
-      <Objects />
+      <Reactor solid={!inChallenge} />
+      <ChallengeScene key={`c${epoch}`} />
+      <Objects key={`o${epoch}`} />
+      <SelectionRing />
+      <Sparks />
       <BurstFX />
     </Physics>
   )

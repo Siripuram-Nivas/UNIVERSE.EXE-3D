@@ -6,11 +6,14 @@ import { CommandBar } from './ui/CommandBar'
 import { LeftPanel } from './ui/LeftPanel'
 import { RightPanel } from './ui/RightPanel'
 import { TopBar } from './ui/TopBar'
+import { ChallengeHud } from './ui/ChallengeHud'
+import { stopMic } from './controls/mic'
 import { checkAiAvailable } from './reality/compiler'
 import { select, selectNext, setAiStatus, useStore } from './store'
 
 export function App() {
   const ready = useStore((s) => s.ready)
+  const paused = useStore((s) => s.paused)
   const wide = typeof window !== 'undefined' && window.matchMedia('(min-width: 1000px)').matches
   const [left, setLeft] = useState(wide)
   const [right, setRight] = useState(wide)
@@ -18,6 +21,8 @@ export function App() {
   useEffect(() => {
     void checkAiAvailable().then((ok) => setAiStatus(ok ? 'ready' : 'unavailable'))
   }, [])
+
+  useEffect(() => stopMic, [])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -33,7 +38,7 @@ export function App() {
 
   return (
     <div className="app">
-      <div className="viewport">
+      <div className={`viewport ${paused ? 'frozen' : ''}`}>
         <ErrorBoundary>
           <Scene />
         </ErrorBoundary>
@@ -45,6 +50,7 @@ export function App() {
         </div>
       )}
       <TopBar />
+      <ChallengeHud />
       <div className="side-toggles">
         <button className="icon-btn" aria-expanded={left} aria-controls="left-panel" onClick={() => setLeft(!left)} title="Toggle laws panel">
           <PanelLeft size={18} aria-hidden /> <span className="sr-only">Toggle laws panel</span>

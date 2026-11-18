@@ -20,6 +20,8 @@ export interface Host {
   setBouncy(b: boolean): void
   burst(color: 'orange' | 'yellow' | 'purple' | 'lime'): void
   log(text: string, ok: boolean): void
+  /** Optional: called after a rule's effect actually ran (used for challenge progress and sparks). */
+  fired?(rule: Rule, pos: Vec3 | null): void
 }
 
 export interface CollisionEvent {
@@ -82,7 +84,7 @@ export class RealityEngine {
     if (this.host.paused()) return { ok: false, message: 'Time is frozen. Resume time, then run the rule.' }
     if (!this.allowEffect()) return { ok: false, message: 'Too many effects right now. Try again in a moment.' }
     const r = this.apply(rule, rule.effect, null)
-    if (r.ok) this.lastFired.set(rule.id, this.time)
+    if (r.ok) { this.lastFired.set(rule.id, this.time); this.host.fired?.(rule, null) }
     return r
   }
 
@@ -123,7 +125,7 @@ export class RealityEngine {
       if (last !== undefined && this.time - last < rule.cooldownS) continue
       if (!this.allowEffect()) return
       const res = this.apply(rule, rule.effect, { ...ev, a, b })
-      if (res.ok) { this.lastFired.set(rule.id, this.time); this.stats.fired++ }
+      if (res.ok) { this.lastFired.set(rule.id, this.time); this.stats.fired++; this.host.fired?.(rule, ev.pos) }
       this.host.log(res.ok ? `Rule "${rule.name}": ${res.message}` : `Rule "${rule.name}" skipped: ${res.message}`, res.ok)
     }
   }

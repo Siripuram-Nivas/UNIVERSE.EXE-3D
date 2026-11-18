@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { ArrowUpFromLine, Box, CircleDot, Crosshair, Move, Rotate3d, Trash2, Weight } from 'lucide-react'
+import { getChallenge } from '../challenges/defs'
 import { bodies, pushBody, type PushKind } from '../physicsRegistry'
-import { clearObjects, fireBurst, MAX_OBJECTS, say, select, selectNext, spawn, useStore, type Kind } from '../store'
+import { clearObjects, fireBurst, getState, MAX_OBJECTS, say, select, selectNext, spawn, useStore, type Kind } from '../store'
 
 function add(kind: Kind, heavy = false) {
+  if (getState().challenge) return say('Spawning is disabled during challenges.', false)
   if (!spawn(kind, heavy)) say(`Object cap reached (${MAX_OBJECTS}). Clear some objects first.`, false)
   else {
     fireBurst('yellow')
@@ -14,6 +16,8 @@ function add(kind: Kind, heavy = false) {
 function SelectedInfo({ id }: { id: number }) {
   const obj = useStore((s) => s.objects.find((o) => o.id === id))
   const paused = useStore((s) => s.paused)
+  const cid = useStore((s) => s.challenge?.id)
+  const blocked = (cid && getChallenge(cid)?.blockedPush) || []
   const [info, setInfo] = useState({ pos: '—', speed: '—' })
   useEffect(() => {
     const tick = () => {
@@ -33,7 +37,7 @@ function SelectedInfo({ id }: { id: number }) {
   if (!obj) return null
 
   const act = (kind: PushKind, label: string) => (
-    <button className="btn" onClick={() => {
+    <button className="btn" disabled={blocked.includes(kind)} title={blocked.includes(kind) ? 'Disabled in this challenge' : undefined} onClick={() => {
         if (!pushBody(id, kind)) {
           say(`${label} failed: object #${id} is not in the physics world.`, false)
           return
@@ -58,8 +62,12 @@ function SelectedInfo({ id }: { id: number }) {
         {act('push', 'Push')}
         {act('launch', 'Launch up')}
         {act('spin', 'Spin')}
+        {act('xp', 'Nudge +X')}
+        {act('xn', 'Nudge −X')}
+        {act('zp', 'Nudge +Z')}
+        {act('zn', 'Nudge −Z')}
       </div>
-      <p className="hint">Throw and Push go away from the camera.</p>
+      <p className="hint">Throw and Push go away from the camera. Nudges follow the world axes (+X is to the right in the default view).</p>
     </div>
   )
 }
@@ -67,6 +75,7 @@ function SelectedInfo({ id }: { id: number }) {
 export function RightPanel() {
   const count = useStore((s) => s.objects.length)
   const selectedId = useStore((s) => s.selectedId)
+  const cid = useStore((s) => s.challenge?.id)
   return (
     <aside id="right-panel" className="panel right glass" aria-label="Objects">
       <section>
@@ -77,7 +86,7 @@ export function RightPanel() {
           <button className="btn wide span2" onClick={() => add('sphere', true)}><Weight size={14} aria-hidden /> Heavy sphere</button>
         </div>
         <p className="count" aria-live="polite">Objects <b>{count}</b> / {MAX_OBJECTS}</p>
-        <button className="btn wide danger" disabled={count === 0} onClick={() => { clearObjects(); say('All objects cleared.') }}>
+        <button className="btn wide danger" disabled={count === 0 || !!cid} onClick={() => { clearObjects(); say('All objects cleared.') }}>
           <Trash2 size={14} aria-hidden /> Clear objects
         </button>
       </section>

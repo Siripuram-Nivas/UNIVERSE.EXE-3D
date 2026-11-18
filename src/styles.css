@@ -141,3 +141,30 @@ button, input { font: inherit; color: inherit; }
 .chip:disabled { opacity: 0.4; cursor: not-allowed; }
 .spin { animation: spin 1s linear infinite; }
 @media (max-width: 560px) { .proposal { flex-direction: column; align-items: stretch; } .panel.left { width: min(300px, calc(100% - 20px)); } }
+
+/* ---- Milestone 3: modes, challenges, saves, effects ---- */
+.mode-switch { display: inline-grid; grid-template-columns: repeat(2, auto); flex: none; }
+.mode-switch button { padding: 6px 12px; }
+.viewport.frozen::after { content: ''; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 140px rgba(162, 89, 255, 0.28); transition: opacity .4s; }
+.hud { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); width: min(560px, calc(100% - 340px)); min-width: 300px; z-index: 5; padding: 10px 14px; display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: center; border-color: var(--pink); }
+.hud-title { display: grid; gap: 2px; font-size: 12px; color: var(--text2); }
+.hud-title b { color: var(--pink); font-family: var(--mono); letter-spacing: 0.12em; font-size: 12px; text-transform: uppercase; }
+.hud-actions { display: flex; gap: 6px; }
+.hud-progress { grid-column: 1 / -1; position: relative; height: 16px; border-radius: 999px; background: rgba(8, 6, 14, 0.7); border: 1px solid var(--line); overflow: hidden; }
+.hud-progress i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, var(--purple), var(--lime)); transition: width .4s ease; }
+.hud-progress small { position: relative; display: block; text-align: center; font-family: var(--mono); font-size: 10px; line-height: 14px; color: var(--text); }
+.hud-hint { grid-column: 1 / -1; margin: 0; font-size: 12px; color: var(--yellow); line-height: 1.4; }
+.solved { position: absolute; left: 50%; top: 38%; transform: translate(-50%, -50%); z-index: 15; text-align: center; padding: 22px 30px; border-radius: 16px; background: rgba(22, 13, 37, 0.88); border: 1px solid var(--lime); box-shadow: 0 0 60px rgba(183, 255, 42, 0.25); animation: pop .5s cubic-bezier(.2, 1.4, .4, 1); }
+.solved h2 { margin: 0 0 6px; font-size: 22px; letter-spacing: 0.2em; color: var(--lime); }
+.solved p { margin: 0 0 14px; color: var(--text2); }
+.solved-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+@keyframes pop { from { transform: translate(-50%, -50%) scale(0.85); opacity: 0; } to { transform: translate(-50%, -50%); opacity: 1; } }
+.cards, .slots { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.cards li, .slots li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: rgba(8, 6, 14, 0.5); font-size: 12px; }
+.cards li.on { border-color: var(--pink); }
+.cards small, .slots small { display: block; margin-top: 2px; color: var(--text2); }
+.cards em { color: var(--lime); font-style: normal; font-family: var(--mono); font-size: 10px; }
+.slots .rule-actions .icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.panel section + section h2 { margin-top: 0; }
+@media (max-width: 999px) { .hud { width: calc(100% - 20px); top: 116px; } }
+@media (prefers-reduced-motion: reduce) { .solved { animation: none; } }

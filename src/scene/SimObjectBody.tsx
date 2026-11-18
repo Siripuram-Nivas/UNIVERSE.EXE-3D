@@ -16,7 +16,7 @@ function SimObjectBodyImpl({ obj }: { obj: SimObject }) {
   const density = heavy ? 6 : 1
   const restitution = getState().bouncy ? REST_BOUNCY : REST_NORMAL
   const base = kind === 'sphere' ? (heavy ? '#240D42' : '#A259FF') : heavy ? '#3a1466' : '#F5B5D2'
-  const emissive = selected ? '#B7FF2A' : heavy ? '#A259FF' : '#000000'
+  const emissive = selected ? '#B7FF2A' : obj.tag === 'target' ? '#F5B5D2' : (obj.gen ?? 0) > 0 ? '#FFD83D' : heavy ? '#A259FF' : '#000000'
 
   return (
     <RigidBody
@@ -25,11 +25,13 @@ function SimObjectBodyImpl({ obj }: { obj: SimObject }) {
         else bodies.delete(id)
       }}
       position={obj.pos}
-      rotation={rotation}
+      {...(obj.quat ? { quaternion: obj.quat } : { rotation })}
+      {...(obj.vel ? { linearVelocity: obj.vel } : {})}
+      {...(obj.angvel ? { angularVelocity: obj.angvel } : {})}
       linearDamping={0.05}
       angularDamping={0.2}
       ccd
-      userData={{ kind, id }}
+      userData={{ kind, id, tag: obj.tag }}
       onCollisionEnter={({ target, other }) => {
         // Cheap by design: bail out when no collision rules are active; the engine queues the rest.
         if (!getState().rules.length) return
@@ -69,7 +71,7 @@ function SimObjectBodyImpl({ obj }: { obj: SimObject }) {
         <meshStandardMaterial
           color={base}
           emissive={emissive}
-          emissiveIntensity={selected ? 0.9 : heavy ? 0.35 : 1}
+          emissiveIntensity={selected ? 0.9 : obj.tag === 'target' ? 0.7 : (obj.gen ?? 0) > 0 ? 0.45 : heavy ? 0.35 : 1}
           metalness={heavy ? 0.8 : 0.25}
           roughness={heavy ? 0.3 : 0.45}
         />

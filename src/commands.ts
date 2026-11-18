@@ -1,5 +1,5 @@
 import {
-  resetUniverse,
+  getState,
   say,
   setBouncy,
   setGravityMode,
@@ -8,6 +8,7 @@ import {
   fireBurst,
   MAX_OBJECTS,
 } from './store'
+import { resetWorld } from './challenges/session'
 
 export interface CommandResult {
   ok: boolean
@@ -25,6 +26,7 @@ interface Command {
 const ok = (message: string): CommandResult => ({ ok: true, message })
 
 function doSpawn(kind: 'sphere' | 'cube'): CommandResult {
+  if (getState().challenge) return { ok: false, message: 'Spawning is disabled during challenges.' }
   if (!spawn(kind)) return { ok: false, message: `Object cap reached (${MAX_OBJECTS}). Clear some objects first.` }
   fireBurst('yellow')
   return ok(`Spawned a ${kind}.`)
@@ -85,8 +87,9 @@ export const COMMANDS: Command[] = [
     name: 'reset universe',
     aliases: ['reset'],
     run: () => {
-      resetUniverse()
-      return ok('Universe reset to its initial state.')
+      const inChallenge = getState().challenge !== null
+      resetWorld()
+      return ok(inChallenge ? 'Challenge restarted.' : 'Universe reset to its initial state.')
     },
   },
 ]

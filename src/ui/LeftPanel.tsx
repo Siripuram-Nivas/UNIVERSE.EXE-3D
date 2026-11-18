@@ -1,5 +1,8 @@
 import { ArrowDown, ArrowUp, Circle, Pause, Play, Zap } from 'lucide-react'
+import { ChallengesSection } from './ChallengesSection'
+import { HumanControls } from './HumanControls'
 import { RecipesSection } from './RecipesSection'
+import { SavePanel } from './SavePanel'
 import { say, setBouncy, setGravityMagnitude, setGravityMode, setPaused, useStore, type GravityMode } from '../store'
 
 const MODES: { mode: GravityMode; label: string; Icon: typeof ArrowDown }[] = [
@@ -13,9 +16,12 @@ export function LeftPanel() {
   const mag = useStore((s) => s.gravityMagnitude)
   const paused = useStore((s) => s.paused)
   const bouncy = useStore((s) => s.bouncy)
+  const uiMode = useStore((s) => s.mode)
 
   return (
     <aside id="left-panel" className="panel left glass" aria-label="Laws of physics">
+      {uiMode === 'challenges' && <ChallengesSection />}
+
       <section>
         <h2>Gravity</h2>
         <div className="seg" role="group" aria-label="Gravity mode">
@@ -67,6 +73,8 @@ export function LeftPanel() {
       <section>
         <RecipesSection />
       </section>
+      <SavePanel />
+      <HumanControls />
     </aside>
   )
 }

@@ -6,7 +6,7 @@ export const bodies = new Map<number, RapierRigidBody>()
 /** Camera forward direction (unit, written each frame by the scene). */
 export const cameraForward = { x: 0, y: 0, z: -1 }
 
-export type PushKind = 'throw' | 'push' | 'launch' | 'spin'
+export type PushKind = 'throw' | 'push' | 'launch' | 'spin' | 'xp' | 'xn' | 'zp' | 'zn'
 
 export function pushBody(id: number, kind: PushKind): boolean {
   const b = bodies.get(id)
@@ -25,6 +25,18 @@ export function pushBody(id: number, kind: PushKind): boolean {
       break
     case 'launch':
       b.applyImpulse({ x: 0, y: m * 14, z: 0 }, true)
+      break
+    case 'xp':
+      b.applyImpulse({ x: m * 5, y: 0, z: 0 }, true)
+      break
+    case 'xn':
+      b.applyImpulse({ x: -m * 5, y: 0, z: 0 }, true)
+      break
+    case 'zp':
+      b.applyImpulse({ x: 0, y: 0, z: m * 5 }, true)
+      break
+    case 'zn':
+      b.applyImpulse({ x: 0, y: 0, z: -m * 5 }, true)
       break
     case 'spin':
       b.applyTorqueImpulse({ x: m * 3, y: m * 4, z: m * 2 }, true)

@@ -1,6 +1,7 @@
 import { bodies } from '../physicsRegistry'
+import { emitSparks } from '../effects'
 import {
-  addRule, fireBurst, getState, removeRule as storeRemove, say, setBouncy, setGravityMode, spawnAt,
+  addRule, challengeEvent, fireBurst, getState, removeRule as storeRemove, say, setBouncy, setGravityMode, spawnAt,
 } from '../store'
 import { RealityEngine, type Host, type RunResult } from './engine'
 import { validateRule } from './validator'
@@ -16,7 +17,15 @@ const liveHost: Host = {
     const p = b.translation()
     return { kind: o.kind, pos: [p.x, p.y, p.z], gen: o.gen ?? 0 }
   },
-  spawn: (kind, pos, gen) => spawnAt(kind, pos, gen),
+  spawn(kind, pos, gen) {
+    const id = spawnAt(kind, pos, gen)
+    if (id !== null) challengeEvent({ type: 'spawn' })
+    return id
+  },
+  fired(_rule, pos) {
+    challengeEvent({ type: 'fired' })
+    if (pos) emitSparks(pos, 'yellow', 14)
+  },
   impulse(id, v) {
     const b = bodies.get(id)
     if (!b) return false
@@ -38,6 +47,7 @@ export const engine = new RealityEngine(liveHost)
 
 /** The single path for adding a rule: builder, presets and confirmed AI proposals all come through here. */
 export function activateDraft(input: unknown, presetId?: string): RunResult & { rule?: Rule } {
+  if (getState().challenge) return { ok: false, message: 'Rules are fixed during challenges. Exit to the sandbox to edit them.' }
   const v = validateRule(input)
   if (!v.ok) return { ok: false, message: `Invalid rule: ${v.errors.join(' ')}` }
   if (presetId && getState().rules.some((r) => r.presetId === presetId)) {
