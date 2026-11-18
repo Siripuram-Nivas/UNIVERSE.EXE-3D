@@ -8,6 +8,7 @@ import { gravityVector, select, setReady, useStore } from '../store'
 import { BurstFX } from './BurstFX'
 import { Chamber } from './Chamber'
 import { PhysicsController } from './PhysicsController'
+import { RealityRunner } from './RealityRunner'
 import { Reactor } from './Reactor'
 import { SimObjectBody } from './SimObjectBody'
 import { prefersReducedMotion } from '../util'
@@ -45,6 +46,7 @@ function World() {
   return (
     <Physics gravity={gravityVector({ gravityMode: gm, gravityMagnitude: mag })} paused={paused}>
       <PhysicsController />
+      <RealityRunner />
       <Chamber />
       <Reactor />
       <Objects />

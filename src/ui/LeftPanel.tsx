@@ -1,4 +1,5 @@
 import { ArrowDown, ArrowUp, Circle, Pause, Play, Zap } from 'lucide-react'
+import { RecipesSection } from './RecipesSection'
 import { say, setBouncy, setGravityMagnitude, setGravityMode, setPaused, useStore, type GravityMode } from '../store'
 
 const MODES: { mode: GravityMode; label: string; Icon: typeof ArrowDown }[] = [
@@ -62,6 +63,9 @@ export function LeftPanel() {
           <li><i /> Time: {paused ? 'frozen' : 'flowing'}</li>
           <li><i /> Collisions: {bouncy ? 'highly elastic' : 'standard'}</li>
         </ul>
+      </section>
+      <section>
+        <RecipesSection />
       </section>
     </aside>
   )

@@ -12,6 +12,8 @@ import {
 export interface CommandResult {
   ok: boolean
   message: string
+  /** True when no deterministic command matched (the caller may offer AI compilation). */
+  unmatched?: boolean
 }
 
 interface Command {
@@ -101,6 +103,7 @@ export function runCommand(input: string): CommandResult {
     : {
         ok: false,
         message: `Unsupported command "${input.trim()}". Available: ${SUGGESTIONS.join(', ')}.`,
+        unmatched: text.length > 0,
       }
   say(result.message, result.ok)
   return result

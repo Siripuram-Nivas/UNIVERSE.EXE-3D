@@ -6,13 +6,18 @@ import { CommandBar } from './ui/CommandBar'
 import { LeftPanel } from './ui/LeftPanel'
 import { RightPanel } from './ui/RightPanel'
 import { TopBar } from './ui/TopBar'
-import { select, selectNext, useStore } from './store'
+import { checkAiAvailable } from './reality/compiler'
+import { select, selectNext, setAiStatus, useStore } from './store'
 
 export function App() {
   const ready = useStore((s) => s.ready)
   const wide = typeof window !== 'undefined' && window.matchMedia('(min-width: 1000px)').matches
   const [left, setLeft] = useState(wide)
   const [right, setRight] = useState(wide)
+
+  useEffect(() => {
+    void checkAiAvailable().then((ok) => setAiStatus(ok ? 'ready' : 'unavailable'))
+  }, [])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

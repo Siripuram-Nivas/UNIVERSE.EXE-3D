@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { LIMITS, type Rule, type RuleDraft } from './reality/types'
 
 export type Kind = 'sphere' | 'cube'
 export type GravityMode = 'normal' | 'zero' | 'reverse'
@@ -7,7 +8,15 @@ export interface SimObject {
   kind: Kind
   heavy: boolean
   pos: [number, number, number]
+  /** 0 for user-spawned objects; rule-spawned objects are parent generation + 1. */
+  gen?: number
 }
+export interface Proposal {
+  input: string
+  draft: RuleDraft
+  notes: string[]
+}
+export type AiStatus = 'unknown' | 'ready' | 'unavailable'
 export type BurstColor = 'orange' | 'yellow' | 'purple' | 'lime'
 export interface Feedback {
   id: number
@@ -35,8 +44,15 @@ interface State {
   selectedId: number | null
   burst: { id: number; color: BurstColor }
   feedback: Feedback
+  rules: Rule[]
+  proposal: Proposal | null
+  compiling: boolean
+  aiStatus: AiStatus
+  /** Bumped by resetUniverse so the engine can clear queued events and timers. */
+  resetCount: number
 }
 
+let nextRuleId = 1
 let nextId = 1
 let nextEvent = 1
 
@@ -65,6 +81,11 @@ let state: State = {
   selectedId: null,
   burst: { id: 0, color: 'purple' },
   feedback: { id: 0, ok: true, text: 'Chamber online. Type a command or use the panels.' },
+  rules: [],
+  proposal: null,
+  compiling: false,
+  aiStatus: 'unknown',
+  resetCount: 0,
 }
 
 const listeners = new Set<() => void>()
@@ -142,6 +163,32 @@ export function resetUniverse() {
     bouncy: false,
     objects: initialObjects(),
     selectedId: null,
+    rules: [],
+    proposal: null,
+    resetCount: state.resetCount + 1,
   })
   fireBurst('orange')
 }
+
+/** Spawn without selecting (used by rules). Returns the new id, or null at the object cap. */
+export function spawnAt(kind: Kind, pos: [number, number, number], gen: number): number | null {
+  if (state.objects.length >= MAX_OBJECTS) return null
+  const obj: SimObject = { id: nextId++, kind, heavy: false, pos, gen }
+  set({ objects: [...state.objects, obj] })
+  return obj.id
+}
+
+/* ---------- reality rules ---------- */
+export function addRule(draft: RuleDraft, presetId?: string): Rule | null {
+  if (state.rules.length >= LIMITS.maxRules) return null
+  const rule: Rule = { ...draft, id: `rule-${nextRuleId++}`, enabled: true, ...(presetId ? { presetId } : {}) }
+  set({ rules: [...state.rules, rule] })
+  return rule
+}
+export const toggleRule = (id: string) =>
+  set({ rules: state.rules.map((r) => (r.id === id ? { ...r, enabled: !r.enabled } : r)) })
+export const removeRule = (id: string) => set({ rules: state.rules.filter((r) => r.id !== id) })
+export const clearRules = () => set({ rules: [] })
+export const setProposal = (proposal: Proposal | null) => set({ proposal })
+export const setCompiling = (compiling: boolean) => set({ compiling })
+export const setAiStatus = (aiStatus: AiStatus) => set({ aiStatus })

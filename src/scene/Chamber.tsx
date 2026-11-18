@@ -13,8 +13,10 @@ export function Chamber() {
   const t = 0.5
   return (
     <>
-      <RigidBody type="fixed" colliders={false}>
+      <RigidBody type="fixed" colliders={false} userData={{ kind: 'floor' }}>
         <CuboidCollider args={[HALF + t, t, HALF + t]} position={[0, -t, 0]} restitution={REST_NORMAL} friction={0.8} />
+      </RigidBody>
+      <RigidBody type="fixed" colliders={false}>
         <CuboidCollider args={[t, HEIGHT / 2, HALF + t]} position={[HALF + t, HEIGHT / 2, 0]} restitution={REST_NORMAL} />
         <CuboidCollider args={[t, HEIGHT / 2, HALF + t]} position={[-HALF - t, HEIGHT / 2, 0]} restitution={REST_NORMAL} />
         <CuboidCollider args={[HALF + t, HEIGHT / 2, t]} position={[0, HEIGHT / 2, HALF + t]} restitution={REST_NORMAL} />

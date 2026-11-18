@@ -1,6 +1,7 @@
 import { memo, useEffect, useState } from 'react'
 import { BallCollider, CuboidCollider, RigidBody } from '@react-three/rapier'
 import { bodies } from '../physicsRegistry'
+import { engine } from '../reality/liveHost'
 import { getState, select, useStore, type SimObject } from '../store'
 
 export const REST_NORMAL = 0.3
@@ -28,6 +29,22 @@ function SimObjectBodyImpl({ obj }: { obj: SimObject }) {
       linearDamping={0.05}
       angularDamping={0.2}
       ccd
+      userData={{ kind, id }}
+      onCollisionEnter={({ target, other }) => {
+        // Cheap by design: bail out when no collision rules are active; the engine queues the rest.
+        if (!getState().rules.length) return
+        const ud = other.rigidBodyObject?.userData as { kind?: string; id?: number } | undefined
+        const otherKind = ud?.kind === 'floor' || ud?.kind === 'sphere' || ud?.kind === 'cube' ? ud.kind : null
+        if (!otherKind || !target.rigidBody) return
+        if (otherKind !== 'floor' && typeof ud?.id !== 'number') return
+        const p = target.rigidBody.translation()
+        const q = otherKind === 'floor' ? p : (other.rigidBody?.translation() ?? p)
+        engine.enqueueCollision({
+          a: { id, kind },
+          b: { id: otherKind === 'floor' ? null : ud!.id!, kind: otherKind },
+          pos: [(p.x + q.x) / 2, (p.y + q.y) / 2, (p.z + q.z) / 2],
+        })
+      }}
     >
       {kind === 'sphere' ? (
         <BallCollider args={[size]} density={density} restitution={restitution} friction={0.6} />
