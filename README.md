@@ -66,35 +66,3 @@ The AI compiler is **off unless `AI_ENABLED=true`** and a key and model are set;
 5. Sandbox: spawn a few objects, Save to slot 1, Reset world, Load slot 1: objects return with their motion. Delete the slot. Corrupt it in dev tools (`localStorage`), reload: the slot shows "corrupted" and loading is refused.
 6. Freeze time: violet vignette, reactor and ring stop. Selecting an object shows the pink ring.
 7. Clap control (needs a microphone): Enable, allow permission, clap once: gravity flips. Speak or play music: it should not flip repeatedly. Disable: the browser's recording indicator goes away. Deny permission: the status says denied and nothing else breaks.
-
-## Browser test checklist (manual, not yet run)
-1. Load: overlay disappears, 6 objects fall and settle, console has no errors.
-2. Drag orbits, wheel zooms. Click an object: it highlights lime and the right panel shows position and speed. `]` selects the next object, `Esc` deselects.
-3. Select an object, press Throw: it flies away from the camera.
-4. `reverse gravity`: resting objects rise and stay under the ceiling. `zero gravity`: they drift. `normal gravity`: they fall.
-5. `freeze time`: objects, reactor ring and stars stop. `resume time`: motion continues from the same positions.
-6. `make everything bouncy`, spawn a cube: it bounces. Spawn to 60/60: the next spawn shows an error.
-7. Add "Chain Reaction": two spheres colliding spawn a sphere near the impact. The count never passes 60 and chains stop after a few generations.
-8. Add "Quantum Kick": a sphere hitting a cube is launched upward. Toggle it off: no effect. Delete it: it leaves the list.
-9. Add "Gravity Glitch": a cube landing on the floor reverses gravity for 3 s, then restores it. With time frozen nothing fires.
-10. Builder: WHEN activation THEN impulse up, Add rule: every object jumps once; the play button repeats it.
-11. Type `when two cubes collide make everything bouncy`: without a key the message says AI is unavailable; with a key a preview appears and nothing happens until Activate.
-12. `make it rain` lists supported commands. `reset universe` clears objects' state and all rules.
-
-## Test status
-`npm test`: 110 tests, all passing (105 from Milestones 1 to 3, plus 5 from Milestone 4: AI enable flag, cross-site and oversized request rejection, stale goal events, cross-level progress isolation, stale sparks). `npm run build` passes. In-browser behavior, the visual effects, the live microphone and the live AI call are **unverified**.
-
-## Known gaps
-- **No `LICENSE` file: release blocker.** The project owner must choose a license (e.g. MIT) and add it. Hackathon rules require an open-source license.
-- JS payload is still about 3 MB (1 MB gzipped), but it is now split: a 214 KB entry chunk paints the interface, then `three` (667 KB), `Scene` (189 KB) and `rapier` (2.06 MB) load in parallel. 2 MB of that is Rapier's WASM embedded as base64 by `@dimforge/rapier3d-compat`, which `@react-three/rapier` requires, so it cannot be shrunk without replacing the physics wrapper.
-- Automated tests cover logic and headless Rapier behavior, not the rendered scene or the React UI.
-- AI rate limits are in-memory and best effort on serverless hosts.
-
-## Release status (kept honest)
-| State | Status |
-|---|---|
-| CODE VERIFIED (tests + build) | Yes: 110 tests, `npm run build`, `npm audit --omit=dev` found 0 vulnerabilities |
-| BROWSER VERIFIED | **No.** No interactive browser was available. Use the checklists in `docs/LAUNCH.md` |
-| PRODUCTION VERIFIED | **No.** Nothing has been deployed |
-| AI VERIFIED | **No.** The endpoint is tested only with mocked provider responses |
-| HACKATHON READY | **No.** Needs LICENSE, deployment, browser verification, demo video, submission |
