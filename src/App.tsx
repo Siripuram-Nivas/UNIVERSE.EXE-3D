@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { PanelLeft, PanelRight } from 'lucide-react'
 import { ErrorBoundary } from './ErrorBoundary'
-import { Scene } from './scene/Scene'
 import { CommandBar } from './ui/CommandBar'
 import { LeftPanel } from './ui/LeftPanel'
 import { RightPanel } from './ui/RightPanel'
@@ -11,9 +10,13 @@ import { stopMic } from './controls/mic'
 import { checkAiAvailable } from './reality/compiler'
 import { select, selectNext, setAiStatus, useStore } from './store'
 
+// The 3D bundle (three + Rapier WASM) loads as separate chunks so the interface shell paints first.
+const Scene = lazy(() => import('./scene/Scene').then((m) => ({ default: m.Scene })))
+
 export function App() {
   const ready = useStore((s) => s.ready)
   const paused = useStore((s) => s.paused)
+  const hasHud = useStore((s) => s.challenge !== null)
   const wide = typeof window !== 'undefined' && window.matchMedia('(min-width: 1000px)').matches
   const [left, setLeft] = useState(wide)
   const [right, setRight] = useState(wide)
@@ -37,10 +40,12 @@ export function App() {
   }, [])
 
   return (
-    <div className="app">
+    <div className={`app ${hasHud ? 'has-hud' : ''}`}>
       <div className={`viewport ${paused ? 'frozen' : ''}`}>
         <ErrorBoundary>
-          <Scene />
+          <Suspense fallback={null}>
+            <Scene />
+          </Suspense>
         </ErrorBoundary>
       </div>
       {!ready && (

@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { getChallenge } from './challenges/defs'
 import { reduceChallenge, type ChallengeEvent, type ChallengeState } from './challenges/state'
-import { emitSparks } from './effects'
+import { emitSparks, sparkQueue } from './effects'
 import { LIMITS, type Rule, type RuleDraft } from './reality/types'
 
 export type Kind = 'sphere' | 'cube'
@@ -250,6 +250,7 @@ export const setAiStatus = (aiStatus: AiStatus) => set({ aiStatus })
 export function replaceWorld(w: WorldState, extra: Partial<State> = {}) {
   for (const o of w.objects) nextId = Math.max(nextId, o.id + 1)
   const rules = w.rules.map((r) => ({ ...r, id: `rule-${nextRuleId++}` }))
+  sparkQueue.length = 0 // visual events from the old world must not appear in the new one
   set({
     ...w,
     rules,
@@ -271,6 +272,8 @@ export function challengeEvent(ev: ChallengeEvent): boolean {
   if (!cur) return false
   const def = getChallenge(cur.id)
   if (!def) return false
+  // A goal hit must come from an object that exists in the current world (ignores stale callbacks).
+  if (ev.type === 'goal' && ev.id !== undefined && !state.objects.some((o) => o.id === ev.id)) return false
   const next = reduceChallenge(cur, def, ev)
   if (next === cur) return false
   set({ challenge: next })

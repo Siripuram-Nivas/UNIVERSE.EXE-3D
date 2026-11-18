@@ -9,7 +9,7 @@ function devApi(): Plugin {
     configureServer(server) {
       // Server-only secrets: loaded without the VITE_ prefix filter and never sent to the browser.
       const env = loadEnv('development', process.cwd(), '')
-      for (const k of ['OPENAI_API_KEY', 'OPENAI_MODEL', 'AI_RATE_PER_MINUTE', 'AI_DAILY_LIMIT']) {
+      for (const k of ['AI_ENABLED', 'OPENAI_API_KEY', 'OPENAI_MODEL', 'AI_RATE_PER_MINUTE', 'AI_DAILY_LIMIT']) {
         if (env[k] && !process.env[k]) process.env[k] = env[k]
       }
       server.middlewares.use('/api/compile', async (req, res) => {
@@ -36,5 +36,16 @@ function devApi(): Plugin {
 
 export default defineConfig({
   plugins: [react(), devApi()],
-  build: { chunkSizeWarningLimit: 2500 },
+  build: {
+    // Rapier's WASM is embedded in JS (~2 MB) and three is ~650 KB; separate chunks download in parallel and cache independently.
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('@dimforge/rapier3d-compat')) return 'rapier'
+          if (id.includes('/node_modules/three/')) return 'three'
+        },
+      },
+    },
+    chunkSizeWarningLimit: 2200,
+  },
 })

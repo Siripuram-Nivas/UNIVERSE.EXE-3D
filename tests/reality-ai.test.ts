@@ -79,12 +79,14 @@ describe('server endpoint (mocked provider)', () => {
     jsonRes({ choices: [{ message: { content: typeof content === 'string' ? content : JSON.stringify(content) } }] }, status)
 
   beforeEach(() => {
+    process.env.AI_ENABLED = 'true'
     process.env.OPENAI_API_KEY = 'test-key'
     process.env.OPENAI_MODEL = 'test-model'
     process.env.AI_RATE_PER_MINUTE = '3'
   })
   afterEach(() => {
     vi.unstubAllGlobals()
+    delete process.env.AI_ENABLED
     delete process.env.OPENAI_API_KEY
     delete process.env.OPENAI_MODEL
     delete process.env.AI_RATE_PER_MINUTE
@@ -97,6 +99,23 @@ describe('server endpoint (mocked provider)', () => {
     expect(res.status).toBe(503)
     expect(f).not.toHaveBeenCalled()
     expect(await GET().json()).toEqual({ configured: false })
+  })
+  it('stays off unless AI_ENABLED=true, even with a key and model set', async () => {
+    delete process.env.AI_ENABLED
+    const f = vi.fn(); vi.stubGlobal('fetch', f)
+    expect((await POST(req('anything goes here'))).status).toBe(503)
+    expect(await GET().json()).toEqual({ configured: false })
+    expect(f).not.toHaveBeenCalled()
+  })
+  it('rejects cross-site browser requests and oversized declared bodies', async () => {
+    const f = vi.fn(); vi.stubGlobal('fetch', f)
+    const cross = new Request('http://x/api/compile', { method: 'POST', headers: { origin: 'https://evil.example', host: 'x', 'x-forwarded-for': '8.8.8.8' }, body: JSON.stringify({ text: 'hello there' }) })
+    expect((await POST(cross)).status).toBe(403)
+    const same = new Request('http://x/api/compile', { method: 'POST', headers: { origin: 'http://x', host: 'x', 'x-forwarded-for': '8.8.8.9' }, body: JSON.stringify({ text: 'hello there' }) })
+    f.mockImplementation(async () => model(flat()))
+    expect((await POST(same)).status).toBe(200)
+    const big = new Request('http://x/api/compile', { method: 'POST', headers: { 'content-length': '999999', 'x-forwarded-for': '8.8.8.10' }, body: '{}' })
+    expect((await POST(big)).status).toBe(413)
   })
   it('compiles a rule using one provider call, sends no secrets to the client', async () => {
     const f = vi.fn().mockResolvedValue(model(flat())); vi.stubGlobal('fetch', f)

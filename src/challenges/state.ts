@@ -8,7 +8,7 @@ export interface ChallengeState {
   /** True once a collision rule has fired in this attempt (needed by Quantum Launch). */
   fired: boolean
 }
-export type ChallengeEvent = { type: 'goal'; tag?: string } | { type: 'spawn' } | { type: 'fired' }
+export type ChallengeEvent = { type: 'goal'; tag?: string; id?: number } | { type: 'spawn' } | { type: 'fired' }
 
 export const initialChallengeState = (def: ChallengeDef): ChallengeState => ({
   id: def.id,

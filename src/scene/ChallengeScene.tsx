@@ -10,6 +10,7 @@ import { REST_NORMAL } from './SimObjectBody'
 const edgesSource = (size: [number, number, number]) => new BoxGeometry(...size)
 
 function BlockMesh({ b }: { b: Block }) {
+  const edges = useMemo(() => edgesSource(b.size), [b.size])
   return (
     <RigidBody type="fixed" colliders={false} position={b.pos}>
       <CuboidCollider args={[b.size[0] / 2, b.size[1] / 2, b.size[2] / 2]} restitution={REST_NORMAL} friction={0.6} />
@@ -18,7 +19,7 @@ function BlockMesh({ b }: { b: Block }) {
         <meshStandardMaterial color="#240D42" emissive="#A259FF" emissiveIntensity={0.18} metalness={0.5} roughness={0.5} />
       </mesh>
       <lineSegments>
-        <edgesGeometry args={[edgesSource(b.size)]} />
+        <edgesGeometry args={[edges]} />
         <lineBasicMaterial color="#F5B5D2" transparent opacity={0.55} />
       </lineSegments>
     </RigidBody>
@@ -56,7 +57,7 @@ function GoalZone({ pos, radius }: { pos: [number, number, number]; radius: numb
         sensor
         onIntersectionEnter={({ other }) => {
           const ud = other.rigidBodyObject?.userData as { id?: number; tag?: string } | undefined
-          if (typeof ud?.id === 'number') challengeEvent({ type: 'goal', tag: ud.tag })
+          if (typeof ud?.id === 'number') challengeEvent({ type: 'goal', tag: ud.tag, id: ud.id })
         }}
       />
       <group ref={ring}>

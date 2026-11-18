@@ -168,3 +168,26 @@ button, input { font: inherit; color: inherit; }
 .panel section + section h2 { margin-top: 0; }
 @media (max-width: 999px) { .hud { width: calc(100% - 20px); top: 116px; } }
 @media (prefers-reduced-motion: reduce) { .solved { animation: none; } }
+
+/* ---- Milestone 4: responsive + touch polish ---- */
+@media (max-width: 1279px) {
+  .hud { top: 116px; width: calc(100% - 20px); }
+  .has-hud .panel { top: 236px; }
+}
+@media (max-width: 720px) {
+  .topbar { gap: 8px; padding: 0 8px; }
+  .brand { font-size: 13px; letter-spacing: 0.08em; }
+  .topbar .status { padding: 6px 8px; gap: 0; }
+  .status-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .topbar .status svg { width: 16px; height: 16px; }
+  .mode-switch button { padding: 6px 8px; font-size: 11px; }
+  .top-actions { gap: 4px; }
+  .cmdbar { padding: 10px; }
+  .cmd-label em { display: none; }
+  .solved { width: calc(100% - 24px); padding: 18px; }
+}
+@media (pointer: coarse) {
+  .icon-btn { width: 42px; height: 42px; }
+  .btn, .chip, .seg button { min-height: 40px; }
+  .rule-actions .icon-btn { width: 36px; height: 36px; }
+}

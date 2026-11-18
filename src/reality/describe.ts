@@ -1,4 +1,4 @@
-import type { Effect, Rule, RuleDraft, Trigger } from './types'
+import type { Effect, Rule, RuleDraft, Trigger } from './types.js'
 
 export function describeTrigger(t: Trigger): string {
   if (t.type === 'activation') return 'Once, when the rule is activated'

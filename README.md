@@ -40,10 +40,10 @@ Blink-to-freeze with MediaPipe (deferred: needs a new dependency and a model dow
 
 ## Live AI test (needs your own key; usage is billed by your provider)
 ```bash
-cp .env.example .env     # set OPENAI_API_KEY and OPENAI_MODEL (server-side only, never VITE_*)
+cp .env.example .env     # set AI_ENABLED=true, OPENAI_API_KEY and OPENAI_MODEL (server-side only, never VITE_*)
 npm run dev
 ```
-The command bar label changes from "(not configured)" to "(ready)". Try `when a cube hits the floor, make everything bouncy for 5 seconds`, then `make every planet explode into 1000 black holes` (it should be refused with an explanation). The endpoint is a Vercel-style function (`api/compile.ts`); on Vercel set the same variables in project settings. Static-only hosts (GitHub Pages, Netlify without functions) need the endpoint hosted separately, otherwise AI shows as unavailable.
+The AI compiler is **off unless `AI_ENABLED=true`** and a key and model are set; the command bar label then changes from "(not configured)" to "(ready)". Try `when a cube hits the floor, make everything bouncy for 5 seconds`, then `make every planet explode into 1000 black holes` (it should be refused with an explanation). The endpoint is a Vercel-style function (`api/compile.ts`); on Vercel set the same variables in project settings. Static-only hosts (GitHub Pages, Netlify without functions) need the endpoint hosted separately, otherwise AI shows as unavailable.
 
 ## Architecture
 `src/store.ts` (state) · `src/commands.ts` (exact commands) · `src/physicsRegistry.ts` (body registry) · `src/reality/*` (types, validator, engine, presets, compiler client, live host) · `src/challenges/*` (levels, reducer, sessions) · `src/world/*` (snapshot, saves) · `src/controls/*` (clap, microphone) · `api/compile.ts` (AI endpoint) · `src/scene/*` (3D world) · `src/ui/*` (overlays) · `tests/*`.
@@ -54,7 +54,8 @@ The command bar label changes from "(not configured)" to "(ready)". Try `when a 
 
 ## Deploy
 `npm run build` produces a static `dist/`.
-- **Vercel (recommended, includes the AI endpoint):** import the repo, build command `npm run build`, output `dist`, add `OPENAI_API_KEY` and `OPENAI_MODEL`.
+- **Vercel (recommended, includes the AI endpoint):** import the repo (Vite preset: build `npm run build`, output `dist`). With no environment variables the app deploys with the AI compiler off; commands, recipes, challenges and saves all work. To enable AI also add `AI_ENABLED=true`, `OPENAI_API_KEY`, `OPENAI_MODEL`. Step-by-step and post-deploy checks: `docs/LAUNCH.md`.
+- **Public AI warning:** the endpoint's rate limits are in-memory per server instance, so they are not a reliable abuse barrier. Before enabling AI on a public URL set a hard spend limit at your provider and add a Vercel Firewall rate-limit rule for `/api/compile`. Leave `AI_ENABLED` unset for a no-cost public demo.
 - **Netlify / Cloudflare Pages / GitHub Pages:** static only. The app works; AI compilation shows as unavailable unless the endpoint is hosted elsewhere. For a GitHub Pages project site build with `npx vite build --base=/UNIVERSE.EXE-3D/`.
 
 ## Challenge, save and effects checklist (manual, not yet run in a browser)
@@ -81,10 +82,19 @@ The command bar label changes from "(not configured)" to "(ready)". Try `when a 
 12. `make it rain` lists supported commands. `reset universe` clears objects' state and all rules.
 
 ## Test status
-`npm test`: 105 tests, all passing (18 from Milestone 1, 49 from Milestone 2, 38 from Milestone 3: challenge reducer, headless-Rapier solvability of all three levels, mode/session behavior, save schema and slots, clap detector and microphone lifecycle). `npm run build` passes. In-browser behavior, the visual effects, the live microphone and the live AI call are **unverified**.
+`npm test`: 110 tests, all passing (105 from Milestones 1 to 3, plus 5 from Milestone 4: AI enable flag, cross-site and oversized request rejection, stale goal events, cross-level progress isolation, stale sparks). `npm run build` passes. In-browser behavior, the visual effects, the live microphone and the live AI call are **unverified**.
 
 ## Known gaps
-- No `LICENSE` file yet (choose one before public release).
-- Large JS bundle (about 3 MB, 1 MB gzipped).
+- **No `LICENSE` file: release blocker.** The project owner must choose a license (e.g. MIT) and add it. Hackathon rules require an open-source license.
+- JS payload is still about 3 MB (1 MB gzipped), but it is now split: a 214 KB entry chunk paints the interface, then `three` (667 KB), `Scene` (189 KB) and `rapier` (2.06 MB) load in parallel. 2 MB of that is Rapier's WASM embedded as base64 by `@dimforge/rapier3d-compat`, which `@react-three/rapier` requires, so it cannot be shrunk without replacing the physics wrapper.
 - Automated tests cover logic and headless Rapier behavior, not the rendered scene or the React UI.
 - AI rate limits are in-memory and best effort on serverless hosts.
+
+## Release status (kept honest)
+| State | Status |
+|---|---|
+| CODE VERIFIED (tests + build) | Yes: 110 tests, `npm run build`, `npm audit --omit=dev` found 0 vulnerabilities |
+| BROWSER VERIFIED | **No.** No interactive browser was available. Use the checklists in `docs/LAUNCH.md` |
+| PRODUCTION VERIFIED | **No.** Nothing has been deployed |
+| AI VERIFIED | **No.** The endpoint is tested only with mocked provider responses |
+| HACKATHON READY | **No.** Needs LICENSE, deployment, browser verification, demo video, submission |

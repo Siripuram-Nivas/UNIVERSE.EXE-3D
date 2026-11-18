@@ -1,8 +1,8 @@
-import { describeRule } from './describe'
+import { describeRule } from './describe.js'
 import {
   BURST_COLORS, GRAVITY_MODES, HIT_KINDS, LIMITS, OBJ_KINDS,
   type Effect, type RuleDraft, type Trigger,
-} from './types'
+} from './types.js'
 
 export type Validation =
   | { ok: true; draft: RuleDraft; notes: string[] }

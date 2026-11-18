@@ -2,14 +2,16 @@
  * POST /api/compile  { text }  ->  { status: 'rule', draft, notes } | { status: 'unsupported', reason }
  * GET  /api/compile            ->  { configured: boolean }   (no model call)
  *
- * Server-side only. Secrets come from process.env (never VITE_*):
- *   OPENAI_API_KEY, OPENAI_MODEL   (both required, otherwise 503 "unconfigured")
+ * Server-side only. Secrets come from process.env (never VITE_*). The endpoint is OFF unless all three are set:
+ *   AI_ENABLED=true, OPENAI_API_KEY, OPENAI_MODEL      (otherwise 503 and no provider call)
  * Optional: AI_RATE_PER_MINUTE (default 6 per IP), AI_DAILY_LIMIT (default 200 per instance).
- * Rate limits are in-memory and best effort (serverless instances do not share memory).
+ * These limits are in-memory and best effort: serverless instances do not share memory, so they are NOT a
+ * reliable abuse barrier. For a public deployment also set a spend cap at the provider and a Vercel
+ * Firewall rate-limit rule on /api/compile (see README).
  */
-import { FLAT_SCHEMA, SYSTEM_PROMPT, flatToDraftInput } from '../src/reality/aiSchema'
-import { LIMITS } from '../src/reality/types'
-import { validateRule } from '../src/reality/validator'
+import { FLAT_SCHEMA, SYSTEM_PROMPT, flatToDraftInput } from '../src/reality/aiSchema.js'
+import { LIMITS } from '../src/reality/types.js'
+import { validateRule } from '../src/reality/validator.js'
 
 const MAX_BODY = 2_000
 const MAX_MODEL_BYTES = 8_000
@@ -22,7 +24,14 @@ let dayCount = 0
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } })
 
-const configured = () => Boolean(process.env.OPENAI_API_KEY && process.env.OPENAI_MODEL)
+const configured = () => process.env.AI_ENABLED === 'true' && Boolean(process.env.OPENAI_API_KEY && process.env.OPENAI_MODEL)
+
+/** Browsers always send Origin on cross-site POSTs. Reject those so other websites cannot spend our quota from a visitor's browser. */
+function crossSite(request: Request): boolean {
+  const origin = request.headers.get('origin')
+  if (!origin) return false
+  try { return new URL(origin).host !== request.headers.get('host') } catch { return true }
+}
 
 function limited(ip: string): string | null {
   const now = Date.now()
@@ -44,7 +53,9 @@ export function GET() {
 }
 
 export async function POST(request: Request): Promise<Response> {
-  if (!configured()) return json({ status: 'unconfigured', error: 'AI compiler is not configured on this server.' }, 503)
+  if (!configured()) return json({ status: 'unconfigured', error: 'AI compiler is not enabled on this server.' }, 503)
+  if (crossSite(request)) return json({ status: 'error', error: 'Cross-site requests are not allowed.' }, 403)
+  if (Number(request.headers.get('content-length') || 0) > MAX_BODY) return json({ status: 'error', error: 'Request too large.' }, 413)
 
   const raw = await request.text()
   if (raw.length > MAX_BODY) return json({ status: 'error', error: 'Request too large.' }, 413)
@@ -53,7 +64,7 @@ export async function POST(request: Request): Promise<Response> {
   if (typeof text !== 'string' || !text.trim()) return json({ status: 'error', error: 'Provide a non-empty "text".' }, 400)
   if (text.length > LIMITS.maxInputChars) return json({ status: 'error', error: `Keep instructions under ${LIMITS.maxInputChars} characters.` }, 400)
 
-  const ip = (request.headers.get('x-forwarded-for') || 'unknown').split(',')[0].trim()
+  const ip = (request.headers.get('x-vercel-forwarded-for') || request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for') || 'unknown').split(',')[0].trim()
   const why = limited(ip)
   if (why) return json({ status: 'error', error: why }, 429)
 

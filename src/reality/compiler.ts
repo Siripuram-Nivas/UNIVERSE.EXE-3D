@@ -39,7 +39,7 @@ export async function compileText(
       body: JSON.stringify({ text: input }),
       signal,
     })
-    if (res.status === 503 || res.status === 404) return { status: 'unavailable', reason: 'AI compiler is not configured on this server.' }
+    if (res.status === 503 || res.status === 404) return { status: 'unavailable', reason: 'AI compiler is not enabled on this server.' }
     let body: unknown
     try { body = await res.json() } catch { return { status: 'error', reason: 'AI endpoint returned an unreadable response.' } }
     if (!res.ok) {

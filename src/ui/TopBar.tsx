@@ -21,7 +21,7 @@ export function TopBar() {
       <div className="world-name">{title ? `CHALLENGE — ${title.toUpperCase()}` : WORLD_NAME}</div>
       <div className={`status ${paused ? 'paused' : 'running'}`} role="status">
         {paused ? <Pause size={14} aria-hidden /> : <Play size={14} aria-hidden />}
-        {paused ? 'TIME FROZEN' : 'SIMULATION RUNNING'}
+        <span className="status-text">{paused ? 'TIME FROZEN' : 'SIMULATION RUNNING'}</span>
       </div>
       <div className="top-actions">
         <button className={`icon-btn ${low ? 'on' : ''}`} aria-pressed={low} onClick={() => { toggleQuality(); say(low ? 'Quality: high (sharper rendering).' : 'Quality: low (reduced resolution for smoother frame rate).') }} title="Toggle low-quality rendering">

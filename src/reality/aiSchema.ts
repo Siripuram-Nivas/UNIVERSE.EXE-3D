@@ -1,4 +1,4 @@
-import { LIMITS } from './types'
+import { LIMITS } from './types.js'
 
 /**
  * Flat JSON schema sent to the model (OpenAI "strict" structured outputs need every key present,

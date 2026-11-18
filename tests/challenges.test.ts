@@ -168,3 +168,38 @@ describe('sessions: enter, restart, exit, modes', () => {
     expect(getState().challenge).toMatchObject({ id: 'chain-reaction', progress: 0 }) // restarted, still in the level
   })
 })
+
+describe('challenge correctness hardening', () => {
+  beforeEach(() => resetUniverse())
+  afterEach(() => resetUniverse())
+
+  it('ignores goal events from object ids that are not in the current world (stale callbacks)', () => {
+    enterChallenge('gravity-escape')
+    expect(challengeEvent({ type: 'goal', tag: 'target', id: 99999 })).toBe(false)
+    expect(getState().challenge!.status).toBe('playing')
+    const target = getState().objects.find((o) => o.tag === 'target')!
+    expect(challengeEvent({ type: 'goal', tag: 'target', id: target.id })).toBe(true)
+  })
+  it('a finished level never leaks progress into the next one', () => {
+    enterChallenge('chain-reaction')
+    challengeEvent({ type: 'spawn' }); challengeEvent({ type: 'spawn' }); challengeEvent({ type: 'spawn' })
+    expect(getState().challenge!.status).toBe('complete')
+    enterChallenge('quantum-launch')
+    expect(getState().challenge).toMatchObject({ id: 'quantum-launch', status: 'playing', progress: 0, fired: false })
+    const target = getState().objects.find((o) => o.tag === 'target')!
+    expect(challengeEvent({ type: 'goal', tag: 'target', id: target.id })).toBe(false) // kick has not fired
+    expect(challengeEvent({ type: 'spawn' })).toBe(false)
+  })
+  it('replacing the world clears queued sparks and leaves no stale rules', async () => {
+    const { sparkQueue, emitSparks } = await import('../src/effects')
+    const { addRule } = await import('../src/store')
+    addRule(PRESETS[0].draft, 'chain-reaction')
+    emitSparks([0, 1, 0], 'lime')
+    enterChallenge('gravity-escape')
+    expect(sparkQueue.some((b) => b.color === 'lime')).toBe(false) // only the new level's own start effect remains
+    sparkQueue.length = 0
+    expect(getState().rules).toHaveLength(0) // gravity-escape has no rules; the sandbox rule is stashed, not active
+    exitChallenge()
+    expect(getState().rules.map((r) => r.presetId)).toEqual(['chain-reaction'])
+  })
+})
