@@ -105,3 +105,7 @@ button, input { font: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
 }
+
+.fatal { position: fixed; inset: 0; z-index: 30; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 24px; text-align: center; background: var(--black); color: var(--text2); }
+.fatal h1 { margin: 0; color: var(--orange); font-size: 20px; letter-spacing: 0.08em; }
+.fatal p { margin: 0; max-width: 460px; font-size: 14px; line-height: 1.5; }

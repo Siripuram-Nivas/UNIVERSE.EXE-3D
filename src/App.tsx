@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { PanelLeft, PanelRight } from 'lucide-react'
+import { ErrorBoundary } from './ErrorBoundary'
 import { Scene } from './scene/Scene'
 import { CommandBar } from './ui/CommandBar'
 import { LeftPanel } from './ui/LeftPanel'
 import { RightPanel } from './ui/RightPanel'
 import { TopBar } from './ui/TopBar'
-import { useStore } from './store'
+import { select, selectNext, useStore } from './store'
 
 export function App() {
   const ready = useStore((s) => s.ready)
@@ -13,10 +14,24 @@ export function App() {
   const [left, setLeft] = useState(wide)
   const [right, setRight] = useState(wide)
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return
+      if (e.key === ']') selectNext(1)
+      else if (e.key === '[') selectNext(-1)
+      else if (e.key === 'Escape') select(null)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   return (
     <div className="app">
       <div className="viewport">
-        <Scene />
+        <ErrorBoundary>
+          <Scene />
+        </ErrorBoundary>
       </div>
       {!ready && (
         <div className="loading" role="status" aria-live="polite">

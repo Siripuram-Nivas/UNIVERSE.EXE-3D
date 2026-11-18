@@ -92,6 +92,13 @@ export const setReady = () => !state.ready && set({ ready: true })
 export const say = (text: string, ok = true) => set({ feedback: { id: nextEvent++, ok, text } })
 export const fireBurst = (color: BurstColor) => set({ burst: { id: nextEvent++, color } })
 export const select = (id: number | null) => set({ selectedId: id })
+export function selectNext(dir: 1 | -1) {
+  const list = state.objects
+  if (!list.length) return
+  const i = list.findIndex((o) => o.id === state.selectedId)
+  const n = i < 0 ? (dir > 0 ? 0 : list.length - 1) : (i + dir + list.length) % list.length
+  set({ selectedId: list[n].id })
+}
 
 export function setGravityMode(mode: GravityMode) {
   set({ gravityMode: mode })

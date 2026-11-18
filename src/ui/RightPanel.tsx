@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ArrowUpFromLine, Box, CircleDot, Crosshair, Move, Rotate3d, Trash2, Weight } from 'lucide-react'
 import { bodies, pushBody, type PushKind } from '../physicsRegistry'
-import { clearObjects, fireBurst, MAX_OBJECTS, say, select, spawn, useStore, type Kind } from '../store'
+import { clearObjects, fireBurst, MAX_OBJECTS, say, select, selectNext, spawn, useStore, type Kind } from '../store'
 
 function add(kind: Kind, heavy = false) {
   if (!spawn(kind, heavy)) say(`Object cap reached (${MAX_OBJECTS}). Clear some objects first.`, false)
@@ -13,6 +13,7 @@ function add(kind: Kind, heavy = false) {
 
 function SelectedInfo({ id }: { id: number }) {
   const obj = useStore((s) => s.objects.find((o) => o.id === id))
+  const paused = useStore((s) => s.paused)
   const [info, setInfo] = useState({ pos: '—', speed: '—' })
   useEffect(() => {
     const tick = () => {
@@ -32,7 +33,14 @@ function SelectedInfo({ id }: { id: number }) {
   if (!obj) return null
 
   const act = (kind: PushKind, label: string) => (
-    <button className="btn" onClick={() => { pushBody(id, kind); fireBurst('orange'); say(`${label} applied to #${id}.`) }}>
+    <button className="btn" onClick={() => {
+        if (!pushBody(id, kind)) {
+          say(`${label} failed: object #${id} is not in the physics world.`, false)
+          return
+        }
+        fireBurst('orange')
+        say(paused ? `${label} applied to #${id}. It takes effect when time resumes.` : `${label} applied to #${id}.`)
+      }}>
       {kind === 'throw' ? <Crosshair size={14} aria-hidden /> : kind === 'push' ? <Move size={14} aria-hidden /> : kind === 'launch' ? <ArrowUpFromLine size={14} aria-hidden /> : <Rotate3d size={14} aria-hidden />}
       {label}
     </button>
@@ -76,10 +84,14 @@ export function RightPanel() {
       <section>
         <h2>Selected object</h2>
         {selectedId === null ? (
-          <p className="hint">Click an object in the chamber to select it.</p>
+          <p className="hint">Click an object, or use the buttons below. Keys: [ previous, ] next, Esc deselect.</p>
         ) : (
           <SelectedInfo id={selectedId} key={selectedId} />
         )}
+        <div className="grid2" style={{ marginTop: 10 }}>
+          <button className="btn" disabled={count === 0} onClick={() => selectNext(-1)}>Previous</button>
+          <button className="btn" disabled={count === 0} onClick={() => selectNext(1)}>Next</button>
+        </div>
         {selectedId !== null && <button className="btn wide ghost" onClick={() => select(null)}>Deselect</button>}
       </section>
     </aside>

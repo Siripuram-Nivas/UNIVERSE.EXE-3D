@@ -1,4 +1,4 @@
-import { memo, useState } from 'react'
+import { memo, useEffect, useState } from 'react'
 import { BallCollider, CuboidCollider, RigidBody } from '@react-three/rapier'
 import { bodies } from '../physicsRegistry'
 import { getState, select, useStore, type SimObject } from '../store'
@@ -9,6 +9,7 @@ export const REST_BOUNCY = 0.92
 function SimObjectBodyImpl({ obj }: { obj: SimObject }) {
   const selected = useStore((s) => s.selectedId === obj.id)
   const { id, kind, heavy } = obj
+  useEffect(() => () => { document.body.style.cursor = '' }, [])
   const [rotation] = useState<[number, number, number]>(() => [Math.random() * 3, Math.random() * 3, 0])
   const size = kind === 'sphere' ? (heavy ? 0.7 : 0.45) : heavy ? 0.9 : 0.7
   const density = heavy ? 6 : 1

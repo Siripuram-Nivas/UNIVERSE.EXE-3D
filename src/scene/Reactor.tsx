@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { BallCollider, RigidBody } from '@react-three/rapier'
 import type { Group, Mesh } from 'three'
+import { getState } from '../store'
 import { prefersReducedMotion } from '../util'
 import { REST_NORMAL } from './SimObjectBody'
 
@@ -13,7 +14,7 @@ export function Reactor() {
   const ring = useRef<Group>(null)
   const core = useRef<Mesh>(null)
   useFrame((_, dt) => {
-    if (prefersReducedMotion()) return
+    if (getState().paused || prefersReducedMotion()) return
     if (ring.current) {
       ring.current.rotation.y += dt * 0.5
       ring.current.rotation.x += dt * 0.2

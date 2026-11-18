@@ -54,6 +54,7 @@ function World() {
 }
 
 export function Scene() {
+  const paused = useStore((s) => s.paused)
   const low = useStore((s) => s.lowQuality)
   return (
     <Canvas
@@ -68,7 +69,7 @@ export function Scene() {
       <ambientLight intensity={0.35} color="#B9A9CC" />
       <directionalLight position={[8, 16, 6]} intensity={1.1} color="#F5B5D2" />
       <pointLight position={[-10, 6, -8]} intensity={60} color="#A259FF" distance={40} />
-      <Stars radius={90} depth={50} count={2500} factor={4} saturation={0.4} fade speed={prefersReducedMotion() ? 0 : 0.6} />
+      <Stars radius={90} depth={50} count={2500} factor={4} saturation={0.4} fade speed={paused || prefersReducedMotion() ? 0 : 0.6} />
       <OrbitControls makeDefault enableDamping target={[0, 4, 0]} minDistance={5} maxDistance={45} maxPolarAngle={Math.PI * 0.92} />
       <CameraSync />
       <Suspense fallback={null}>
