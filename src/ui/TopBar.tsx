@@ -1,4 +1,5 @@
-import { Pause, Play, RotateCcw, Settings } from 'lucide-react'
+import { Flame, Pause, Play, RotateCcw, Settings } from 'lucide-react'
+import { enterBreak } from '../demo/session'
 import { resetWorld, switchMode } from '../challenges/session'
 import { getChallenge } from '../challenges/defs'
 import { say, setPaused, toggleQuality, useStore, WORLD_NAME } from '../store'
@@ -18,6 +19,7 @@ export function TopBar() {
         <button className={mode === 'sandbox' ? 'active' : ''} aria-pressed={mode === 'sandbox'} onClick={() => switchMode('sandbox')}>Sandbox</button>
         <button className={mode === 'challenges' ? 'active' : ''} aria-pressed={mode === 'challenges'} onClick={() => switchMode('challenges')}>Challenges</button>
       </div>
+      <button className="btn accent break-btn" onClick={() => enterBreak()} title="A 10-second guided experiment"><Flame size={14} aria-hidden /> <span>Break Reality</span></button>
       <div className="world-name">{title ? `CHALLENGE — ${title.toUpperCase()}` : WORLD_NAME}</div>
       <div className={`status ${paused ? 'paused' : 'running'}`} role="status">
         {paused ? <Pause size={14} aria-hidden /> : <Play size={14} aria-hidden />}

@@ -1,16 +1,18 @@
 import { useState } from 'react'
-import { Download, RotateCcw, Save, Trash2 } from 'lucide-react'
+import { Download, Link2, RotateCcw, Save, Trash2 } from 'lucide-react'
 import { challengeNote } from '../challenges/session'
 import { fireBurst, replaceWorld, say, useStore } from '../store'
 import { captureWorld } from '../world/snapshot'
 import { deleteSlot, readSlot, saveToWorld, SLOTS, toSave, writeSlot, type SlotRead } from '../world/save'
 import { resetWorld } from '../challenges/session'
+import { encodeShare, shareUrl } from '../world/share'
 
 const slots = () => Array.from({ length: SLOTS }, (_, i) => readSlot(i + 1))
 
 export function SavePanel() {
-  const locked = useStore((s) => s.challenge !== null)
+  const locked = useStore((s) => s.challenge !== null || s.session !== null)
   const [list, setList] = useState<SlotRead[]>(slots)
+  const [link, setLink] = useState('')
   const refresh = () => setList(slots())
 
   const save = (n: number) => {
@@ -24,6 +26,14 @@ export function SavePanel() {
     replaceWorld(saveToWorld(r.save), { mode: 'sandbox', challenge: null, stash: null })
     fireBurst('purple')
     say(`Loaded slot ${n}.${r.notes.length ? ' ' + r.notes.join(' ') : ''} Velocities restored; physics sleep state is not.`)
+  }
+  const share = async () => {
+    const r = encodeShare(captureWorld())
+    if (!r.ok) { setLink(''); return say(r.error, false) }
+    const url = shareUrl(r.token, window.location.href)
+    setLink(url)
+    try { await navigator.clipboard.writeText(url); say('Share link copied. Anyone can open it to preview and play your experiment.') }
+    catch { say('Share link ready below. Copy it manually.') }
   }
   const del = (n: number) => { deleteSlot(n); say(`Deleted slot ${n}.`); refresh() }
 
@@ -48,6 +58,8 @@ export function SavePanel() {
           </li>
         ))}
       </ul>
+      <button className="btn wide" disabled={locked} onClick={() => void share()}><Link2 size={14} aria-hidden /> Share experiment</button>
+      {link && <input className="share-link" readOnly value={link} aria-label="Share link" onFocus={(e) => e.currentTarget.select()} />}
       <button className="btn wide" onClick={() => resetWorld()}><RotateCcw size={14} aria-hidden /> Reset world</button>
     </section>
   )

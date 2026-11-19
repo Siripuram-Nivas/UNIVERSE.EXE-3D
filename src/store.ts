@@ -31,6 +31,13 @@ export interface WorldState {
   paused: boolean
 }
 export type Mode = 'sandbox' | 'challenges'
+/** A guided experiment that temporarily replaces the sandbox (the sandbox is stashed and restored on exit). */
+export type Session =
+  | { type: 'break'; phase: 'ready' | 'broken' }
+  | { type: 'shared'; world: WorldState }
+export type SharedPreview =
+  | { ok: true; world: WorldState; notes: string[] }
+  | { ok: false; error: string }
 export type MicStatus = 'off' | 'requesting' | 'on' | 'denied' | 'unavailable'
 export interface Proposal {
   input: string
@@ -81,6 +88,8 @@ interface State {
   micSensitivity: number
   /** Ids of solved challenges (persisted in localStorage). */
   completed: string[]
+  session: Session | null
+  sharedPreview: SharedPreview | null
 }
 
 const PROGRESS_KEY = 'universe-exe:progress'
@@ -134,6 +143,8 @@ let state: State = {
   micStatus: 'off',
   micSensitivity: 5,
   completed: loadCompleted(),
+  session: null,
+  sharedPreview: null,
 }
 
 const listeners = new Set<() => void>()
@@ -217,6 +228,7 @@ export function resetUniverse() {
     mode: 'sandbox',
     challenge: null,
     stash: null,
+    session: null,
     epoch: state.epoch + 1,
   })
   fireBurst('orange')
@@ -258,9 +270,12 @@ export function replaceWorld(w: WorldState, extra: Partial<State> = {}) {
     proposal: null,
     resetCount: state.resetCount + 1,
     epoch: state.epoch + 1,
+    session: null,
     ...extra,
   })
 }
+export const setSession = (session: Session | null) => set({ session })
+export const setSharedPreview = (sharedPreview: SharedPreview | null) => set({ sharedPreview })
 export const setMode = (mode: Mode) => set({ mode })
 export const setMic = (micStatus: MicStatus) => set({ micStatus })
 export const setMicSensitivity = (micSensitivity: number) => set({ micSensitivity })

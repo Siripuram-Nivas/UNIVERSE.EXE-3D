@@ -87,9 +87,9 @@ export const COMMANDS: Command[] = [
     name: 'reset universe',
     aliases: ['reset'],
     run: () => {
-      const inChallenge = getState().challenge !== null
+      const guided = getState().challenge !== null || getState().session !== null
       resetWorld()
-      return ok(inChallenge ? 'Challenge restarted.' : 'Universe reset to its initial state.')
+      return ok(guided ? 'Restarted from the beginning.' : 'Universe reset to its initial state.')
     },
   },
 ]

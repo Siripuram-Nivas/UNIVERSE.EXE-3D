@@ -191,3 +191,21 @@ button, input { font: inherit; color: inherit; }
   .btn, .chip, .seg button { min-height: 40px; }
   .rule-actions .icon-btn { width: 36px; height: 36px; }
 }
+
+/* ---- Competition pass: Break Reality, welcome, shared worlds ---- */
+.break-btn { flex: none; padding: 6px 12px; font-size: 12px; letter-spacing: 0.04em; }
+.btn.big { padding: 12px 20px; font-size: 15px; min-height: 44px; }
+.break-hud { grid-template-columns: 1fr auto; }
+.break-hud .link-btn { grid-column: 1 / -1; justify-self: start; background: none; border: 0; padding: 2px 0; color: var(--text2); font-size: 11px; text-decoration: underline; cursor: pointer; }
+.break-hud .link-btn:hover { color: var(--text); }
+.session-actions { flex-wrap: wrap; justify-content: flex-end; }
+.welcome { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); z-index: 14; width: min(440px, calc(100% - 24px)); padding: 20px 22px; text-align: center; border-color: var(--purple); animation: fadein .4s ease; }
+.welcome h2 { margin: 0 0 6px; font-size: 18px; letter-spacing: 0.06em; }
+.welcome p { margin: 0 0 14px; color: var(--text2); font-size: 13px; line-height: 1.45; }
+.welcome .hint { margin: 0 0 14px; }
+.welcome.err-card { border-color: var(--orange); }
+.preview-rules { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 6px; text-align: left; font-size: 12px; color: var(--text2); }
+.preview-rules li { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: rgba(8, 6, 14, 0.5); }
+.share-link { width: 100%; margin: 8px 0; padding: 6px 8px; border-radius: 8px; background: rgba(8, 6, 14, 0.7); border: 1px solid var(--line); font-family: var(--mono); font-size: 10px; }
+.hud-title b svg { vertical-align: -1px; margin-right: 4px; }
+@media (max-width: 720px) { .break-btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; } .break-btn { padding: 6px 10px; } .break-hud { grid-template-columns: 1fr; } .session-actions { justify-content: flex-start; } }

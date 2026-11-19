@@ -6,6 +6,7 @@ import {
   type SimObject, type WorldState,
 } from '../store'
 import { captureWorld } from '../world/snapshot'
+import { replayBreak, replayShared } from '../demo/session'
 import { getChallenge, type ChallengeDef } from './defs'
 import { initialChallengeState } from './state'
 
@@ -29,7 +30,7 @@ export function enterChallenge(id: string): boolean {
   const def = getChallenge(id)
   if (!def) return false
   const s = getState()
-  const stash = s.challenge ? s.stash : captureWorld()
+  const stash = s.stash ?? captureWorld()
   replaceWorld(worldFor(def), { mode: 'challenges', challenge: initialChallengeState(def), stash })
   fireBurst('purple')
   if (def.goal) emitSparks(def.goal.pos, 'pink', 20)
@@ -63,13 +64,16 @@ export const challengeNote = 'Saving and loading are disabled during a challenge
 
 export function switchMode(mode: 'sandbox' | 'challenges') {
   if (mode === 'sandbox') {
-    if (getState().challenge) exitChallenge()
+    if (getState().challenge || getState().session) exitChallenge()
     else setMode('sandbox')
   } else setMode('challenges')
 }
 
 /** Reset button / command: restarts the level during a challenge, otherwise resets the sandbox. */
 export function resetWorld() {
-  if (getState().challenge) restartChallenge()
+  const s = getState()
+  if (s.challenge) restartChallenge()
+  else if (s.session?.type === 'break') replayBreak()
+  else if (s.session?.type === 'shared') replayShared()
   else resetUniverse()
 }

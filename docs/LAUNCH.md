@@ -9,6 +9,9 @@ Nothing here has been run in a real browser or deployed yet. Each box is for **y
 4. No `vercel.json` is needed: the app has no client-side routes, so there is no SPA fallback to protect `/api`.
 5. If the function fails to start in the Vercel logs with a module-not-found error, the cause is the `.js` import suffixes in `api/compile.ts` and `src/reality/*` (TypeScript ESM convention). Report the log line and it is a one-line fix. This could not be tested without a deployment.
 
+## 1b. Or deploy to Render (static, no AI)
+New, Static Site, connect the repo. Build command `npm install && npm run build`, publish directory `dist`. No rewrites needed. The AI compiler will show "(not configured)"; everything else, including share links, works.
+
 ## 2. Enable AI later (optional, costs money)
 1. At your provider, set a **hard monthly spend limit** and usage alerts first.
 2. In Vercel, set `AI_ENABLED=true`, `OPENAI_API_KEY`, `OPENAI_MODEL` (Production only). Never use a `VITE_` prefix.
@@ -18,6 +21,8 @@ Nothing here has been run in a real browser or deployed yet. Each box is for **y
 
 ## 3. Browser checklist (desktop, Chrome or Edge)
 Open the console first; note any red errors.
+- [ ] First visit shows the welcome card. Break Reality: objects visibly rise for about 2.5 s then fall; the button text changes and Replay / Explore Sandbox / Try Challenges appear
+- [ ] Share experiment copies a link; open it in a private window: preview card, Play loads it, Remix keeps it; a damaged link (delete characters) shows an error
 - [ ] Chamber renders, objects fall and settle; drag orbits, wheel zooms
 - [ ] `reverse gravity` lifts resting objects; `zero gravity` drifts; `normal gravity` drops
 - [ ] `freeze time` freezes objects, reactor and stars; `resume time` continues from the same positions

@@ -35,6 +35,27 @@ npm run build    # typecheck + production build into dist/
 - **Effects tied to real events:** reactor flares in the colour of each reality change, sparks when a rule fires / a level starts / a level is solved, pink ring on the selected object, violet vignette while time is frozen. Reduced motion disables the animated effects.
 - **Clap control (optional):** "Human controls" in the left panel. Off by default; permission is requested only when you press Enable. A loud short sound flips gravity normal/reverse. It is a loudness heuristic, so noise can trigger it; adjust sensitivity. Audio is analysed locally (level only), never recorded or sent. Nudge buttons (+X, −X, +Z, −Z) were added for precise pushes.
 
+## Implemented (first-experience and sharing pass)
+- **Break Reality:** a button in the top bar (and on the first-visit welcome card) loads a fixed arrangement of 8 spheres and 6 cubes. One press adds a validated rule through the normal rule engine, and Rapier gravity really reverses for 2.5 s, then the engine restores it. The Violet Meltdown burst and sparks fire only after the state change succeeds. Afterwards: Replay, Explore Sandbox, Try Challenges. Needs no key and no backend. Your own sandbox is stashed and restored.
+- **Share experiment (Reality DNA):** "Share experiment" in the left panel turns the current world into a link (`#w=...`, a URL fragment that never reaches a server, so it works on any static host). Opening it shows a preview (counts, gravity, rules); **Play** loads it with its rules, **Replay** restarts, **Remix** keeps it as your sandbox, **Exit** restores yours. Limits: 30 objects, 6 rules, 4000 characters. Ids, velocities and tags are not shared. Imports go through the save validator (allowlisted kinds and rules, clamped numbers); nothing is evaluated. Bad or oversized links show a clear error.
+
+## Feature status (honest)
+| Feature | Implemented | Automated tests | Seen in a real browser |
+|---|---|---|---|
+| Sandbox physics, gravity, freeze, commands | yes | logic and headless Rapier | **no** |
+| Reality recipes and rule builder | yes | engine, validator, Rapier events | **no** |
+| Three challenges | yes | solvability in headless Rapier | **no** |
+| Save slots | yes | schema, storage, load | **no** |
+| Break Reality | yes | state, rule path, headless Rapier lift | **no** |
+| Share links | yes | encode, decode, limits, bad input, Play/Remix | **no** |
+| AI compiler | yes, off by default | mocked provider only | **no** (never run against a real model) |
+| Clap control | yes (heuristic) | detector, lifecycle | **no** |
+| Blink control | **no, deferred** | n/a | n/a |
+
+## Kiro in practice: two real problems
+1. **Gravity changes would have done nothing to resting objects.** The physics engine puts still bodies to sleep and a sleeping body ignores a new gravity vector. A headless Rapier test written from the spec demonstrates it ("sleeping bodies ignore gravity changes until woken"), and the fix (wake every body on gravity or resume) is now covered by that test. Break Reality depends on it.
+2. **A level that looked solvable was not reliably solvable.** Chain Reaction passed only 12 of 16 seeded runs with a 1.5 s rule cooldown. The spec-defined headless harness (`tests/rapierHarness.ts`) replays each level's intended solution, so the cooldown was tuned to 0.8 s and the cluster tightened, giving 16 of 16. The same harness checks that the unsolved cases (reversing too early, an untagged object entering the goal, no kick rule) do not complete.
+
 ## Not implemented (future, not started)
 Blink-to-freeze with MediaPipe (deferred: needs a new dependency and a model download, and cannot be verified here). More levels, cloud saves, sharing, post-processing. Rule conditions, rules with several effects, object types other than sphere/cube.
 
@@ -55,6 +76,7 @@ The AI compiler is **off unless `AI_ENABLED=true`** and a key and model are set;
 ## Deploy
 `npm run build` produces a static `dist/`.
 - **Vercel (recommended, includes the AI endpoint):** import the repo (Vite preset: build `npm run build`, output `dist`). With no environment variables the app deploys with the AI compiler off; commands, recipes, challenges and saves all work. To enable AI also add `AI_ENABLED=true`, `OPENAI_API_KEY`, `OPENAI_MODEL`. Step-by-step and post-deploy checks: `docs/LAUNCH.md`.
+- **Render Static Site:** build command `npm install && npm run build`, publish directory `dist`, no rewrite rules needed (the app has one page; share links use the URL fragment). Static sites have no `/api`, so the AI compiler shows "(not configured)" and everything else works. Use Vercel (or a separate backend) only if you want AI.
 - **Public AI warning:** the endpoint's rate limits are in-memory per server instance, so they are not a reliable abuse barrier. Before enabling AI on a public URL set a hard spend limit at your provider and add a Vercel Firewall rate-limit rule for `/api/compile`. Leave `AI_ENABLED` unset for a no-cost public demo.
 - **Netlify / Cloudflare Pages / GitHub Pages:** static only. The app works; AI compilation shows as unavailable unless the endpoint is hosted elsewhere. For a GitHub Pages project site build with `npx vite build --base=/UNIVERSE.EXE-3D/`.
 
