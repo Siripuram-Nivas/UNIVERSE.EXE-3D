@@ -6,6 +6,7 @@ import { Vector3 } from 'three'
 import { cameraForward } from '../physicsRegistry'
 import { gravityVector, select, setReady, useStore } from '../store'
 import { BurstFX } from './BurstFX'
+import { ForceFX } from './ForceFX'
 import { Chamber } from './Chamber'
 import { PhysicsController } from './PhysicsController'
 import { RealityRunner } from './RealityRunner'
@@ -59,6 +60,7 @@ function World() {
       <SelectionRing />
       <Sparks />
       <BurstFX />
+      <ForceFX />
     </Physics>
   )
 }

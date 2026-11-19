@@ -8,3 +8,7 @@ const MAX_PENDING = 8
 export function emitSparks(pos: [number, number, number], color: SparkColor, count = 16) {
   if (sparkQueue.length < MAX_PENDING) sparkQueue.push({ pos, color, count })
 }
+
+/** One-shot visuals for Force Lab, pushed only after an impulse was really applied. Drained by the scene each frame. */
+export interface ForceFx { kind: 'shockwave' | 'implosion' | 'vortex'; pos: [number, number, number] }
+export const forceFxQueue: ForceFx[] = []
