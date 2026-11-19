@@ -209,3 +209,8 @@ button, input { font: inherit; color: inherit; }
 .share-link { width: 100%; margin: 8px 0; padding: 6px 8px; border-radius: 8px; background: rgba(8, 6, 14, 0.7); border: 1px solid var(--line); font-family: var(--mono); font-size: 10px; }
 .hud-title b svg { vertical-align: -1px; margin-right: 4px; }
 @media (max-width: 720px) { .break-btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; } .break-btn { padding: 6px 10px; } .break-hud { grid-template-columns: 1fr; } .session-actions { justify-content: flex-start; } }
+
+/* ---- Force Lab ---- */
+.selected .sub { margin: 14px 0 8px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--purple); }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.btn.force { flex-direction: column; gap: 4px; padding: 8px 4px; font-size: 11px; line-height: 1.15; text-align: center; }

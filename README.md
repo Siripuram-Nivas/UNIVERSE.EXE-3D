@@ -55,6 +55,17 @@ When the AI endpoint is enabled, a sentence that is not an exact command is sent
 ### Three physics challenges
 See [Reality Challenges](#reality-challenges).
 
+### Force Lab
+Select an object, then use **Shockwave**, **Implosion** or **Vortex Pulse** in the right panel. Each is a **one-time impulse** applied with Rapier's `applyImpulse` to dynamic bodies within 6 units of the selected object. The selected object itself is not pushed, and nothing is teleported or animated in place of physics.
+
+| Action | What the impulse does |
+|---|---|
+| Shockwave | pushes nearby bodies directly away from the selected object, stronger the closer they are |
+| Implosion | pulls nearby bodies toward it, fading near contact so they collide with it instead of overlapping |
+| Vortex Pulse | pushes bodies sideways around the vertical axis through it, with a small upward lift |
+
+The impulse is a fixed amount, so a heavy sphere (about 20 times the mass of a normal one) changes velocity far less, and walls, floor and gravity act on the result as usual. Velocity changes are capped at 15 m/s. These are not black holes, sustained fields or stable orbits: once the impulse is delivered, ordinary physics takes over. Force Lab is available only in ordinary Sandbox play with time running; it is disabled in challenges, Break Reality and shared-world sessions. It does not change saves, share links or rules. Status: covered by automated and headless Rapier tests, **not yet verified in a browser**.
+
 ### Reality DNA: shareable experiments
 **Share experiment** (left panel) turns the current world into a link. The data lives in the URL fragment (`#w=...`), which is never sent to a server, so it works on any static host. Opening a link shows a preview (object counts, gravity, rules). **Play** loads it with its rules, **Replay** restarts it, **Remix** keeps it as your sandbox, and **Exit** restores yours. Limits: 30 objects, 6 rules, 4000 characters. Ids, velocities and tags are not shared. Imports pass through the save validator (allowlisted kinds and rules, clamped numbers) and nothing is evaluated. Malformed or oversized links show a clear error.
 
@@ -85,7 +96,7 @@ UNIVERSE.EXE was built with Kiro as a series of milestones, each driven by writt
 
 - **Spec-driven development.** Each milestone has `requirements.md`, `design.md` and `tasks.md` under `.kiro/specs/`: `universe-exe` (sandbox), `reality-compiler` (rules and AI), `beautiful-chaos` (challenges, saves, effects), `launch-protocol` (release hardening) and `first-experience` (Break Reality and sharing). The specs fixed scope, recorded design decisions (rule schema, event system, safety limits, API boundary) and explicitly deferred later work. For example, blink-to-freeze is recorded as deferred rather than shipped half-done.
 - **Steering.** `.kiro/steering/project.md` holds rules applied to every change: real 3D only (no 2D or CSS fakes), the colour palette, state in `src/store.ts`, per-frame work mutates refs, the interpreter is deterministic and never presented as AI, and no code execution.
-- **Automated testing.** 127 Vitest tests, including headless Rapier tests that run the same physics engine without a browser.
+- **Automated testing.** 154 Vitest tests, including headless Rapier tests that run the same physics engine without a browser.
 - **Real problem 1: sleeping bodies ignore gravity changes.** Rapier puts resting bodies to sleep, and a sleeping body does not react to a new gravity vector. A headless test written from the spec (`sleeping bodies ignore gravity changes until woken`) demonstrates it. The app therefore wakes every body when gravity changes or time resumes, and the test guards that. Reverse gravity and Break Reality depend on it.
 - **Real problem 2: a level that looked solvable was not reliably solvable.** With a 1.5 s rule cooldown, Chain Reaction passed only **12 of 16** seeded headless runs. The harness in `tests/rapierHarness.ts` replays each level's intended solution, so the cooldown was tuned to 0.8 s and the cluster tightened, giving **16 of 16**.
 
@@ -111,6 +122,7 @@ src/physicsRegistry.ts   id -> live Rapier body, impulses
 src/reality/             rule types, validator, engine, presets, AI client, live host
 src/challenges/          level definitions, pure reducer, sessions
 src/demo/                Break Reality world and session
+src/physics/             Force Lab maths and apply/fire logic
 src/world/               snapshot, saves, share links (save.ts, share.ts)
 src/controls/            clap detector, microphone lifecycle
 src/scene/               3D world: chamber, reactor, bodies, goal zones, sparks
@@ -123,7 +135,7 @@ docs/                    LAUNCH.md (checklists, demo script), USER_TESTING.md
 
 ## Verification Status
 
-Automated checks: **127 tests passing** and a successful production build at the time of writing (rerun with `npm test` and `npm run build`).
+Automated checks: **154 tests passing** and a successful production build at the time of writing (rerun with `npm test` and `npm run build`).
 
 Browser status is reported separately, because passing tests is not the same as working in a browser.
 
@@ -137,12 +149,22 @@ Browser status is reported separately, because passing tests is not the same as 
 | Sandbox / Challenges mode switching | yes | **Verified** by the project owner |
 | Completing all three challenges | solvability in headless Rapier | **Not verified** |
 | Break Reality first experience | yes, including headless lift test | **Not verified** |
+| Force Lab (Shockwave, Implosion, Vortex Pulse) | yes, including headless Rapier tests | **Not verified** |
 | Reality DNA share links | encode, decode, limits, bad input, Play and Remix | **Not verified** |
 | Clap controls | detector and lifecycle only | **Not verified** (needs a real microphone) |
 | AI Reality Compiler | mocked provider only | **Not verified** (never run against a real model) |
 | Blink control | n/a | **Not implemented** (deferred) |
 
 The "Verified" rows come from earlier manual testing reported by the project owner, not from the automated checks. The newest features have only been tested by the automated suite. Manual checklists: [`docs/LAUNCH.md`](docs/LAUNCH.md) (browser, responsive, deployment, demo script) and [`docs/USER_TESTING.md`](docs/USER_TESTING.md) (testing with five first-time users).
+
+### Force Lab manual checks
+1. Sandbox, spawn a few objects, click one to select it. The three Force Lab buttons enable.
+2. **Shockwave**: neighbours within about 6 units fly away and bounce off walls; the feedback line says how many were pushed; an orange ring expands.
+3. **Implosion**: neighbours move toward the selected object and collide with it instead of overlapping; a purple ring contracts.
+4. **Vortex Pulse**: neighbours swirl around the selected object and lift slightly, then fall back; violet points orbit briefly.
+5. Heavy sphere nearby barely moves compared with normal ones. With no objects in range the message says "nothing in range" and no effect plays.
+6. Buttons are disabled with a reason while time is frozen, with nothing selected, in a challenge, in Break Reality and in a shared world; they work again back in the sandbox.
+7. At 390 px wide the three buttons fit in one row without overlap.
 
 ## Installation and Deployment
 

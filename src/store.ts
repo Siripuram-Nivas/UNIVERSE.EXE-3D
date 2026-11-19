@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { getChallenge } from './challenges/defs'
 import { reduceChallenge, type ChallengeEvent, type ChallengeState } from './challenges/state'
-import { emitSparks, sparkQueue } from './effects'
+import { emitSparks, forceFxQueue, sparkQueue } from './effects'
 import { LIMITS, type Rule, type RuleDraft } from './reality/types'
 
 export type Kind = 'sphere' | 'cube'
@@ -231,6 +231,7 @@ export function resetUniverse() {
     session: null,
     epoch: state.epoch + 1,
   })
+  forceFxQueue.length = 0
   fireBurst('orange')
 }
 
@@ -263,6 +264,7 @@ export function replaceWorld(w: WorldState, extra: Partial<State> = {}) {
   for (const o of w.objects) nextId = Math.max(nextId, o.id + 1)
   const rules = w.rules.map((r) => ({ ...r, id: `rule-${nextRuleId++}` }))
   sparkQueue.length = 0 // visual events from the old world must not appear in the new one
+  forceFxQueue.length = 0
   set({
     ...w,
     rules,

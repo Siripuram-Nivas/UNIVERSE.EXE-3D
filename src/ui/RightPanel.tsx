@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
-import { ArrowUpFromLine, Box, CircleDot, Crosshair, Move, Rotate3d, Trash2, Weight } from 'lucide-react'
+import { ArrowUpFromLine, Box, CircleDot, Crosshair, Move, Orbit, Rotate3d, Shrink, Trash2, Waves, Weight } from 'lucide-react'
 import { getChallenge } from '../challenges/defs'
 import { bodies, pushBody, type PushKind } from '../physicsRegistry'
+import { FORCE_LABEL, type ForceKind } from '../physics/force'
+import { fireForce, forceLabBlock } from '../physics/forceLab'
 import { clearObjects, fireBurst, getState, MAX_OBJECTS, say, select, selectNext, spawn, useStore, type Kind } from '../store'
 
 function add(kind: Kind, heavy = false) {
@@ -17,7 +19,9 @@ function SelectedInfo({ id }: { id: number }) {
   const obj = useStore((s) => s.objects.find((o) => o.id === id))
   const paused = useStore((s) => s.paused)
   const cid = useStore((s) => s.challenge?.id)
+  const session = useStore((s) => s.session)
   const blocked = (cid && getChallenge(cid)?.blockedPush) || []
+  const forceBlock = forceLabBlock({ challenge: cid ?? null, session, paused, selectedId: id }, bodies.has(id))
   const [info, setInfo] = useState({ pos: '—', speed: '—' })
   useEffect(() => {
     const tick = () => {
@@ -67,6 +71,16 @@ function SelectedInfo({ id }: { id: number }) {
         {act('zp', 'Nudge +Z')}
         {act('zn', 'Nudge −Z')}
       </div>
+      <h3 className="sub">Force Lab</h3>
+      <div className="grid3" role="group" aria-label="Force Lab: one-time impulses on nearby objects">
+        {(['shockwave', 'implosion', 'vortex'] as ForceKind[]).map((k) => (
+          <button key={k} className="btn force" disabled={forceBlock !== null} title={forceBlock ?? `${FORCE_LABEL[k]} around #${id}`} onClick={() => fireForce(k)}>
+            {k === 'shockwave' ? <Waves size={14} aria-hidden /> : k === 'implosion' ? <Shrink size={14} aria-hidden /> : <Orbit size={14} aria-hidden />}
+            {FORCE_LABEL[k]}
+          </button>
+        ))}
+      </div>
+      <p className="hint">{forceBlock ?? 'One-time impulse on objects within 6 units of the selected one. The selected object itself does not move.'}</p>
       <p className="hint">Throw and Push go away from the camera. Nudges follow the world axes (+X is to the right in the default view).</p>
     </div>
   )
