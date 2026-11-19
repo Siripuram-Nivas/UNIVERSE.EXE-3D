@@ -1,90 +1,199 @@
-# UNIVERSE.EXE — Hack Reality
+# 🌌 UNIVERSE.EXE — Hack Reality
 
-A browser 3D physics sandbox: **CHAMBER 001 — THE PARADOX CORE**. Real WebGL (Three.js via React Three Fiber) with Rapier 3D rigid-body physics. Language becomes validated physics rules.
+**What if the laws of physics were yours to rewrite?**
 
-## Run
+### [▶ Play Live Demo](https://universe-exe-3d-1.onrender.com/)
+
+UNIVERSE.EXE is a browser-based, interactive 3D physics laboratory. Flip gravity, freeze time, write collision-driven **Reality Recipes**, solve three 3D physics challenges, and share your experiments as a link. Everything runs in real time on WebGL with a real rigid-body physics engine, and the whole app works without a login, a backend, or an API key.
+
+Built for **Kiroween 2026** in the **Frankenstein** category and developed with **Kiro**. Stack: React Three Fiber, Three.js, Rapier and TypeScript.
+
+[Screenshots](#screenshots) · [Break Reality](#break-reality) · [Features](#features) · [Challenges](#reality-challenges) · [How Kiro was used](#how-kiro-was-used) · [Architecture](#technology-and-architecture) · [Verification status](#verification-status) · [Install and deploy](#installation-and-deployment) · [Limitations](#known-limitations) · [License](#license)
+
+> The live demo is hosted as a Render Static Site. It does **not** run the server-side AI endpoint, so freeform AI commands are unavailable there. Exact commands, the rule builder, recipes, challenges, saving and sharing all work.
+
+## Screenshots
+
+> **Screenshot placeholder.** No screenshots or gameplay GIF are committed yet. Before submission, capture real images from the running app (for example the chamber at rest, Break Reality mid-effect, a challenge ring, the Reality recipes panel) into a `docs/images/` folder and link them here. Only add images of the actual application.
+
+## Break Reality
+
+The fastest way to see what the app does. Press **Break Reality** in the top bar, or on the welcome card shown on a first visit.
+
+- A fixed arrangement of **eight spheres and six cubes** appears around the reactor.
+- One press adds a validated rule through the normal rule engine, and gravity in the Rapier world **really reverses for 2.5 seconds**. Objects rise, collide with the ceiling, and fall back when the engine restores gravity.
+- The burst and sparks play only after the state change has succeeded, and the on-screen text follows the live gravity state.
+- Afterwards choose **Replay**, **Explore Sandbox** or **Try Challenges**. Your own sandbox is stored while the experiment runs and restored when you leave.
+- No login and no API key.
+
+Status: implemented and covered by automated tests (including a headless Rapier test that the objects rise and fall). **Not yet verified in a real browser.**
+
+## Features
+
+### Interactive 3D physics sandbox
+Orbit and zoom camera, a bounded chamber (floor grid, walls, ceiling, stars) and a decorative central reactor. The reactor is a static collider and **exerts no gravity**. Spawn spheres, cubes and heavy spheres (cap 60). Select by click or with `[` / `]`, then Throw, Push, Launch up, Spin or Nudge along ±X/±Z with real impulses. Failed actions are reported.
+
+### Gravity and time manipulation
+Gravity is normal, zero or reverse, with an adjustable magnitude, and a change wakes sleeping bodies. Freezing time stops the physics, the reactor and the star twinkle, and keeps every position. "Everything bouncy" raises restitution on all bodies, including ones spawned later.
+
+### Deterministic commands (not AI)
+Nine exact commands run locally and never call a model: `reverse gravity`, `zero gravity`, `normal gravity`, `freeze time`, `resume time`, `spawn sphere`, `spawn cube`, `make everything bouncy`, `reset universe` (plus a few aliases).
+
+### Reality Recipes and rule builder
+A rule is **WHEN** a trigger **THEN** an effect, with a cooldown and an optional duration.
+
+| | Supported options |
+|---|---|
+| Triggers | collision (sphere or cube against sphere, cube or floor), or one-shot activation |
+| Effects | spawn an object, apply an impulse, change gravity, change bounciness, visual burst |
+
+Three recipes are included: **Chain Reaction** (two spheres collide, a sphere spawns), **Quantum Kick** (a sphere hits a cube and is launched upward), **Gravity Glitch** (a cube hits the floor, gravity reverses for 3 s). Recipes can be added, toggled and deleted independently, and the manual **rule builder** uses the same validator and engine. Safety limits: object cap, 12 rules, per-rule cooldowns, 6 effects per second, collision de-duplication, a spawn-generation limit, and clamped numbers. Frozen time discards collision events and pauses cooldowns.
+
+### Reality Compiler (optional AI)
+When the AI endpoint is enabled, a sentence that is not an exact command is sent to one model, which can only propose a rule in the strict schema above. The proposal is validated on the server and again in the browser, previewed, and added only after you press Activate. A language model never runs physics. **This is off by default, runs only on a host with the serverless endpoint and a key, and has never been tested against a live model.** On the Render demo it shows "(not configured)". See [AI configuration](#ai-configuration-optional).
+
+### Three physics challenges
+See [Reality Challenges](#reality-challenges).
+
+### Reality DNA: shareable experiments
+**Share experiment** (left panel) turns the current world into a link. The data lives in the URL fragment (`#w=...`), which is never sent to a server, so it works on any static host. Opening a link shows a preview (object counts, gravity, rules). **Play** loads it with its rules, **Replay** restarts it, **Remix** keeps it as your sandbox, and **Exit** restores yours. Limits: 30 objects, 6 rules, 4000 characters. Ids, velocities and tags are not shared. Imports pass through the save validator (allowlisted kinds and rules, clamped numbers) and nothing is evaluated. Malformed or oversized links show a clear error.
+
+### Save and load
+Three local slots in browser storage (objects, rotations, velocities, gravity, bounciness, rules), with a versioned, validated schema. Corrupt or oversized saves are rejected. Bodies are rebuilt on load and physics sleep state is not restored, so a loaded world is close to, not identical with, the saved one.
+
+### Clap controls (optional)
+Off by default. Permission is requested only when you press Enable. A short loud sound flips gravity between normal and reverse. It is a loudness heuristic, not clap recognition, so other noises can trigger it (sensitivity is adjustable). Audio is analysed in the browser and is never recorded or sent.
+
+### Violet Meltdown visual design
+A dark cosmic base with restrained accents: `#08060E`, `#240D42`, `#A259FF`, `#F5B5D2`, plus orange `#FF5A1F`, yellow `#FFD83D` and lime `#B7FF2A` for events. Effects are tied to real simulation events: the reactor flares in the colour of each reality change, sparks fire when a rule runs or a level starts or is solved, a ring follows the selected object, and a violet vignette shows while time is frozen. Reduced-motion preferences disable the animated effects.
+
+## Reality Challenges
+
+Open them from **Challenges** in the top bar. Entering a level stores your sandbox, exiting restores it, and Reset restarts the level. Spawning, rule editing and saving are disabled during a level. Success is always a real physics event, never a button, and a level completes only once.
+
+| Challenge | Objective | How it is won |
+|---|---|---|
+| **Gravity Escape** | Get the glowing sphere into the energy ring above a shelf. | The sphere rolls under the shelf. Reverse gravity at the right moment (about 4.5 s in, once it is past the shelf edge) and it rises into the ring. Reversing too early traps it. Launch and Throw are disabled. The ring is a Rapier sensor that only counts the tagged sphere. |
+| **Chain Reaction** | Make the Chain Reaction rule spawn 3 new spheres. | A lone sphere and a nine-sphere cluster. Select the lone sphere and nudge it into the cluster. Only spheres created by the rule count, and the rule cooldown and object cap apply. |
+| **Quantum Launch** | Use Quantum Kick to launch the sphere into the ring. | Nudge the sphere into the heavy cube. The kick fires on impact and sends the sphere up to the ring. The ring only counts after the kick has fired. |
+
+All three are checked for solvability, and for the failure cases (reversing too early, an untagged object entering the ring, no kick rule), in a headless Rapier harness. They have not been completed by hand in a browser yet.
+
+## How Kiro Was Used
+
+UNIVERSE.EXE was built with Kiro as a series of milestones, each driven by written specs and always-on steering rules. The commit history shows the work done by the Kiro agent.
+
+- **Spec-driven development.** Each milestone has `requirements.md`, `design.md` and `tasks.md` under `.kiro/specs/`: `universe-exe` (sandbox), `reality-compiler` (rules and AI), `beautiful-chaos` (challenges, saves, effects), `launch-protocol` (release hardening) and `first-experience` (Break Reality and sharing). The specs fixed scope, recorded design decisions (rule schema, event system, safety limits, API boundary) and explicitly deferred later work. For example, blink-to-freeze is recorded as deferred rather than shipped half-done.
+- **Steering.** `.kiro/steering/project.md` holds rules applied to every change: real 3D only (no 2D or CSS fakes), the colour palette, state in `src/store.ts`, per-frame work mutates refs, the interpreter is deterministic and never presented as AI, and no code execution.
+- **Automated testing.** 127 Vitest tests, including headless Rapier tests that run the same physics engine without a browser.
+- **Real problem 1: sleeping bodies ignore gravity changes.** Rapier puts resting bodies to sleep, and a sleeping body does not react to a new gravity vector. A headless test written from the spec (`sleeping bodies ignore gravity changes until woken`) demonstrates it. The app therefore wakes every body when gravity changes or time resumes, and the test guards that. Reverse gravity and Break Reality depend on it.
+- **Real problem 2: a level that looked solvable was not reliably solvable.** With a 1.5 s rule cooldown, Chain Reaction passed only **12 of 16** seeded headless runs. The harness in `tests/rapierHarness.ts` replays each level's intended solution, so the cooldown was tuned to 0.8 s and the cluster tightened, giving **16 of 16**.
+
+How this helped: specs kept each pass small and scoped, steering stopped drift toward fake effects, and tests turned physics assumptions into checks that run in seconds without opening a browser.
+
+## Technology and Architecture
+
+| Layer | Technology |
+|---|---|
+| UI | React 18, TypeScript, plain CSS, lucide-react icons |
+| 3D rendering | Three.js 0.160, React Three Fiber 8, Drei 9 |
+| Physics | Rapier 3D via `@react-three/rapier` 1.5 |
+| Build | Vite 5 |
+| Tests | Vitest 2 (logic and headless Rapier) |
+| Optional AI endpoint | One serverless function (`api/compile.ts`), OpenAI Chat Completions with strict JSON schema |
+
+The app is a single page. React state lives in one small external store, and per-frame work mutates refs instead of React state. The rule engine talks to the world through a `Host` interface, which is why it can be tested without WebGL.
+
+```
+src/store.ts             app state, actions, world replacement
+src/commands.ts          the nine exact commands
+src/physicsRegistry.ts   id -> live Rapier body, impulses
+src/reality/             rule types, validator, engine, presets, AI client, live host
+src/challenges/          level definitions, pure reducer, sessions
+src/demo/                Break Reality world and session
+src/world/               snapshot, saves, share links (save.ts, share.ts)
+src/controls/            clap detector, microphone lifecycle
+src/scene/               3D world: chamber, reactor, bodies, goal zones, sparks
+src/ui/                  overlay panels, HUDs, command bar
+api/compile.ts           optional AI endpoint
+tests/                   Vitest suites and the headless Rapier harness
+.kiro/                   specs and steering
+docs/                    LAUNCH.md (checklists, demo script), USER_TESTING.md
+```
+
+## Verification Status
+
+Automated checks: **127 tests passing** and a successful production build at the time of writing (rerun with `npm test` and `npm run build`).
+
+Browser status is reported separately, because passing tests is not the same as working in a browser.
+
+| Area | Automated tests | Browser status |
+|---|---|---|
+| Gravity and time controls | yes | **Verified** by the project owner in manual testing |
+| Object spawning and selection | yes | **Verified** by the project owner |
+| Manual Reality Recipes (rule builder, presets) | yes | **Verified** by the project owner |
+| Exact local commands | yes | **Verified** by the project owner |
+| Save and load | yes | **Verified** by the project owner |
+| Sandbox / Challenges mode switching | yes | **Verified** by the project owner |
+| Completing all three challenges | solvability in headless Rapier | **Not verified** |
+| Break Reality first experience | yes, including headless lift test | **Not verified** |
+| Reality DNA share links | encode, decode, limits, bad input, Play and Remix | **Not verified** |
+| Clap controls | detector and lifecycle only | **Not verified** (needs a real microphone) |
+| AI Reality Compiler | mocked provider only | **Not verified** (never run against a real model) |
+| Blink control | n/a | **Not implemented** (deferred) |
+
+The "Verified" rows come from earlier manual testing reported by the project owner, not from the automated checks. The newest features have only been tested by the automated suite. Manual checklists: [`docs/LAUNCH.md`](docs/LAUNCH.md) (browser, responsive, deployment, demo script) and [`docs/USER_TESTING.md`](docs/USER_TESTING.md) (testing with five first-time users).
+
+## Installation and Deployment
+
+Requires Node.js 20 or newer.
+
 ```bash
 npm install
-npm run dev      # Vite dev server
-npm test         # vitest
+npm run dev      # Vite dev server, usually http://localhost:5173
+npm test         # Vitest
 npm run build    # typecheck + production build into dist/
 ```
 
-## Implemented (Milestone 1: sandbox)
-- Orbit/zoom camera, chamber with floor grid, walls, ceiling, stars, decorative reactor (static collider, **exerts no gravity**).
-- Spawn sphere, cube, heavy sphere (cap 60); clear; reset.
-- Select by click or keyboard (`[` / `]` or Previous/Next buttons, `Esc` deselects). Throw, Push, Launch up, Spin apply real impulses; failures are reported.
-- Gravity: normal / zero / reverse + magnitude. Freeze/resume time (physics, reactor and star twinkle stop; positions are preserved). "Everything bouncy".
-- Command bar with nine exact deterministic commands (not AI): `reverse gravity`, `zero gravity`, `normal gravity`, `freeze time`, `resume time`, `spawn sphere`, `spawn cube`, `make everything bouncy`, `reset universe`.
-- Low-quality rendering toggle, error screen if WebGL/WASM fails.
+### Render Static Site (the live demo)
+Build command `npm install && npm run build`, publish directory `dist`, no rewrite rules (one page; share links use the URL fragment). Static sites have no `/api`, so the AI compiler stays at "(not configured)". Everything else works.
 
-## Implemented (Milestone 2: Reality Compiler)
-- **Rule engine** (`src/reality/`): WHEN/THEN rules with triggers (collision: sphere/cube vs sphere/cube/floor, or one-shot activation) and effects (spawn, impulse, gravity, bounciness, visual burst), cooldowns and optional durations. Executed from real Rapier collision events.
-- **Three recipes:** Chain Reaction (sphere+sphere spawns a sphere), Quantum Kick (sphere hits cube, sphere launched up), Gravity Glitch (cube hits floor, gravity reverses for 3 s). Each can be added, enabled, disabled and deleted independently.
-- **Rule builder** and preset buttons in the left panel ("Reality recipes"), using the same validation and activation path as AI proposals.
-- **AI compiler:** type a sentence that is not one of the nine exact commands. `/api/compile` asks one model, the result is validated server-side and again in the browser, shown as a preview, and added only after you press Activate. Exact commands never call a model. Without server credentials the UI says AI is not configured and everything else keeps working.
-- **Safety:** object cap, rule cap (12), per-rule cooldown, 6 effects/s, collision de-duplication, spawn generation limit (3), clamped numbers, removed-body handling. Freezing time discards collision events and pauses cooldown and duration clocks. Reset clears rules, queue and timers.
+### Vercel (includes the optional AI endpoint)
+Import the repository with the Vite preset (build `npm run build`, output `dist`). With no environment variables it deploys with AI off, exactly like Render. To enable AI add the variables below in the project settings. Step-by-step instructions and post-deploy checks are in [`docs/LAUNCH.md`](docs/LAUNCH.md).
 
-## Implemented (Milestone 3: Beautiful Chaos)
-- **Two modes** (top bar): Sandbox, and Challenges. Entering a challenge stashes your sandbox; exiting restores it (positions, rotations, velocities, gravity, rules). Reset restarts the level while in a challenge.
-- **Challenge 1, Gravity Escape:** a glowing sphere rolls under a shelf. Win when it enters the energy ring (a Rapier sensor) after you reverse gravity at the right moment. Launch/Throw are disabled.
-- **Challenge 2, Chain Reaction:** the Chain Reaction rule is preloaded. Win when it has spawned 3 spheres from real collisions. Only rule-made spheres count.
-- **Challenge 3, Quantum Launch:** nudge the sphere into the heavy cube; Quantum Kick fires and the sphere must reach the ring. The goal only counts after the kick has fired.
-- Goal rings ignore every object except the tagged one and complete only once. Progress bar, hint, restart, exit, "Reality solved" overlay, solved levels remembered in localStorage.
-- **Save / load:** 3 local slots (objects, rotations, velocities, gravity, bounciness, pause, rules), versioned and validated. Corrupt or oversized saves are rejected. Loaded bodies are rebuilt; physics sleep state is not restored, so a loaded world is close to, not identical with, the saved one.
-- **Effects tied to real events:** reactor flares in the colour of each reality change, sparks when a rule fires / a level starts / a level is solved, pink ring on the selected object, violet vignette while time is frozen. Reduced motion disables the animated effects.
-- **Clap control (optional):** "Human controls" in the left panel. Off by default; permission is requested only when you press Enable. A loud short sound flips gravity normal/reverse. It is a loudness heuristic, so noise can trigger it; adjust sensitivity. Audio is analysed locally (level only), never recorded or sent. Nudge buttons (+X, −X, +Z, −Z) were added for precise pushes.
+### Other static hosts
+Netlify, Cloudflare Pages and GitHub Pages serve the app without AI. For a GitHub Pages project site build with `npx vite build --base=/UNIVERSE.EXE-3D/`.
 
-## Implemented (first-experience and sharing pass)
-- **Break Reality:** a button in the top bar (and on the first-visit welcome card) loads a fixed arrangement of 8 spheres and 6 cubes. One press adds a validated rule through the normal rule engine, and Rapier gravity really reverses for 2.5 s, then the engine restores it. The Violet Meltdown burst and sparks fire only after the state change succeeds. Afterwards: Replay, Explore Sandbox, Try Challenges. Needs no key and no backend. Your own sandbox is stashed and restored.
-- **Share experiment (Reality DNA):** "Share experiment" in the left panel turns the current world into a link (`#w=...`, a URL fragment that never reaches a server, so it works on any static host). Opening it shows a preview (counts, gravity, rules); **Play** loads it with its rules, **Replay** restarts, **Remix** keeps it as your sandbox, **Exit** restores yours. Limits: 30 objects, 6 rules, 4000 characters. Ids, velocities and tags are not shared. Imports go through the save validator (allowlisted kinds and rules, clamped numbers); nothing is evaluated. Bad or oversized links show a clear error.
+### AI configuration (optional)
+The endpoint is off unless `AI_ENABLED` is exactly `true` and a key and model are set. Keys are server-side only and must never use a `VITE_` prefix.
 
-## Feature status (honest)
-| Feature | Implemented | Automated tests | Seen in a real browser |
-|---|---|---|---|
-| Sandbox physics, gravity, freeze, commands | yes | logic and headless Rapier | **no** |
-| Reality recipes and rule builder | yes | engine, validator, Rapier events | **no** |
-| Three challenges | yes | solvability in headless Rapier | **no** |
-| Save slots | yes | schema, storage, load | **no** |
-| Break Reality | yes | state, rule path, headless Rapier lift | **no** |
-| Share links | yes | encode, decode, limits, bad input, Play/Remix | **no** |
-| AI compiler | yes, off by default | mocked provider only | **no** (never run against a real model) |
-| Clap control | yes (heuristic) | detector, lifecycle | **no** |
-| Blink control | **no, deferred** | n/a | n/a |
+| Variable | Purpose |
+|---|---|
+| `AI_ENABLED` | must be `true` to turn the endpoint on |
+| `OPENAI_API_KEY` | provider key (server-side only) |
+| `OPENAI_MODEL` | model name |
+| `AI_RATE_PER_MINUTE`, `AI_DAILY_LIMIT` | optional best-effort limits (default 6 and 200) |
 
-## Kiro in practice: two real problems
-1. **Gravity changes would have done nothing to resting objects.** The physics engine puts still bodies to sleep and a sleeping body ignores a new gravity vector. A headless Rapier test written from the spec demonstrates it ("sleeping bodies ignore gravity changes until woken"), and the fix (wake every body on gravity or resume) is now covered by that test. Break Reality depends on it.
-2. **A level that looked solvable was not reliably solvable.** Chain Reaction passed only 12 of 16 seeded runs with a 1.5 s rule cooldown. The spec-defined headless harness (`tests/rapierHarness.ts`) replays each level's intended solution, so the cooldown was tuned to 0.8 s and the cluster tightened, giving 16 of 16. The same harness checks that the unsolved cases (reversing too early, an untagged object entering the goal, no kick rule) do not complete.
-
-## Not implemented (future, not started)
-Blink-to-freeze with MediaPipe (deferred: needs a new dependency and a model download, and cannot be verified here). More levels, cloud saves, sharing, post-processing. Rule conditions, rules with several effects, object types other than sphere/cube.
-
-## Live AI test (needs your own key; usage is billed by your provider)
 ```bash
-cp .env.example .env     # set AI_ENABLED=true, OPENAI_API_KEY and OPENAI_MODEL (server-side only, never VITE_*)
+cp .env.example .env     # fill in the values, then
 npm run dev
 ```
-The AI compiler is **off unless `AI_ENABLED=true`** and a key and model are set; the command bar label then changes from "(not configured)" to "(ready)". Try `when a cube hits the floor, make everything bouncy for 5 seconds`, then `make every planet explode into 1000 black holes` (it should be refused with an explanation). The endpoint is a Vercel-style function (`api/compile.ts`); on Vercel set the same variables in project settings. Static-only hosts (GitHub Pages, Netlify without functions) need the endpoint hosted separately, otherwise AI shows as unavailable.
+The built-in rate limits are in memory per server instance and are **not** a reliable abuse barrier. Before enabling AI on a public URL, set a hard spend limit at your provider and add a firewall rate-limit rule for `/api/compile`.
 
-## Architecture
-`src/store.ts` (state) · `src/commands.ts` (exact commands) · `src/physicsRegistry.ts` (body registry) · `src/reality/*` (types, validator, engine, presets, compiler client, live host) · `src/challenges/*` (levels, reducer, sessions) · `src/world/*` (snapshot, saves) · `src/controls/*` (clap, microphone) · `api/compile.ts` (AI endpoint) · `src/scene/*` (3D world) · `src/ui/*` (overlays) · `tests/*`.
+## Known Limitations
 
-## How Kiro was used
-- **Specs:** `.kiro/specs/universe-exe/` (Milestone 1), `.kiro/specs/reality-compiler/` (Milestone 2) and `.kiro/specs/beautiful-chaos/` (Milestone 3) hold requirements, design (schema, pipeline, safety limits, API boundary) and tasks. They scoped each milestone and deferred later work.
-- **Steering:** `.kiro/steering/project.md` holds always-on rules (real 3D only, palette, no fake AI, state in the store, stay in the authorised milestone).
+- **AI is not available on the live demo.** Render Static Site has no server endpoint, so freeform AI commands cannot work there. Elsewhere it has never been run against a real model; only mocked responses are tested.
+- **Browser verification gaps.** The newest features (Break Reality, share links, full challenge completion, clap controls, live AI) have not been verified in a browser. Visuals, frame rate and mobile hardware performance are untested. See [Verification Status](#verification-status).
+- **Blink-to-freeze is deferred.** It would need a new dependency and a model download.
+- **Share links are limited.** 30 objects, 6 rules and 4000 characters, with no short links, and velocities are not shared. Links are long because the world is stored in the URL.
+- **Loaded worlds are approximate.** Saves and shared worlds restore positions, rotations and velocities, but not physics sleep state or contact caches.
+- **Clap detection is a loudness heuristic** and can be triggered by other loud sounds.
+- **Rule language is small.** One effect per rule, no conditions, and only spheres and cubes.
+- **Download size.** About 3 MB of JavaScript (about 1 MB gzipped), mostly Rapier's embedded WASM (about 2 MB). It is split into separate chunks so the interface paints first.
+- **Challenge levels** are verified as solvable only in a headless physics replica of the scene.
 
-## Deploy
-`npm run build` produces a static `dist/`.
-- **Vercel (recommended, includes the AI endpoint):** import the repo (Vite preset: build `npm run build`, output `dist`). With no environment variables the app deploys with the AI compiler off; commands, recipes, challenges and saves all work. To enable AI also add `AI_ENABLED=true`, `OPENAI_API_KEY`, `OPENAI_MODEL`. Step-by-step and post-deploy checks: `docs/LAUNCH.md`.
-- **Render Static Site:** build command `npm install && npm run build`, publish directory `dist`, no rewrite rules needed (the app has one page; share links use the URL fragment). Static sites have no `/api`, so the AI compiler shows "(not configured)" and everything else works. Use Vercel (or a separate backend) only if you want AI.
-- **Public AI warning:** the endpoint's rate limits are in-memory per server instance, so they are not a reliable abuse barrier. Before enabling AI on a public URL set a hard spend limit at your provider and add a Vercel Firewall rate-limit rule for `/api/compile`. Leave `AI_ENABLED` unset for a no-cost public demo.
-- **Netlify / Cloudflare Pages / GitHub Pages:** static only. The app works; AI compilation shows as unavailable unless the endpoint is hosted elsewhere. For a GitHub Pages project site build with `npx vite build --base=/UNIVERSE.EXE-3D/`.
+## License
 
-## Challenge, save and effects checklist (manual, not yet run in a browser)
-1. Top bar: Challenges, then Play on "Gravity Escape". The shelf, ring and glowing sphere appear; objective and progress bar show. Click the sphere, wait about 5 s until it is past the shelf edge, run `reverse gravity`: it rises into the ring, the ring turns lime, sparks fire and "Reality solved" appears. Reversing at the very start must not solve it.
-2. Replay, then Exit: the sandbox comes back exactly as you left it. Next: "Chain Reaction": select the lone sphere and press Nudge +X; yellow-tinted spheres appear and the bar reaches 3/3.
-3. "Quantum Launch": select the sphere, Nudge +X. It hits the cube, flies up and the ring completes. Launch/Throw are greyed out.
-4. During a level: spawn buttons, clear, rule editing and saving are disabled. Reset restarts the level.
-5. Sandbox: spawn a few objects, Save to slot 1, Reset world, Load slot 1: objects return with their motion. Delete the slot. Corrupt it in dev tools (`localStorage`), reload: the slot shows "corrupted" and loading is refused.
-6. Freeze time: violet vignette, reactor and ring stop. Selecting an object shows the pink ring.
-7. Clap control (needs a microphone): Enable, allow permission, clap once: gravity flips. Speak or play music: it should not flip repeatedly. Disable: the browser's recording indicator goes away. Deny permission: the status says denied and nothing else breaks.
+Released under the [MIT License](LICENSE). Copyright (c) 2026 Siripuram Nivas.
+
+Third-party dependencies keep their own licenses (for example, Rapier is Apache-2.0). The repository bundles no images, fonts, audio or 3D models.
